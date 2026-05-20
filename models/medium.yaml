@@ -1,0 +1,183 @@
+# Medium: 6 entities, 6 relationships, 6 business rules
+name: student_course_system_medium
+description: >
+  A complete student course selection and management system with users,
+  departments, courses, enrollments, and grades. Teachers manage courses,
+  students enroll and receive grades.
+
+entities:
+  - name: User
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: username
+        type: string
+        required: true
+        unique: true
+        max_length: 50
+      - name: password_hash
+        type: string
+        required: true
+      - name: role
+        type: string
+        required: true
+      - name: full_name
+        type: string
+        required: true
+        max_length: 100
+      - name: email
+        type: string
+        required: true
+        unique: true
+        max_length: 200
+
+  - name: Department
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: name
+        type: string
+        required: true
+        unique: true
+        max_length: 100
+      - name: code
+        type: string
+        required: true
+        unique: true
+        max_length: 20
+    relationships:
+      - type: one_to_many
+        target: Course
+        back_populates: department
+
+  - name: Course
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: title
+        type: string
+        required: true
+        max_length: 200
+      - name: description
+        type: string
+        nullable: true
+      - name: capacity
+        type: integer
+        required: true
+        default: 30
+      - name: credits
+        type: integer
+        required: true
+        default: 3
+      - name: department_id
+        type: integer
+        required: true
+    relationships:
+      - type: many_to_one
+        target: Department
+        foreign_key: department_id
+      - type: many_to_one
+        target: User
+        foreign_key: teacher_id
+      - type: many_to_many
+        target: User
+        through: Enrollment
+
+  - name: Enrollment
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: student_id
+        type: integer
+        required: true
+      - name: course_id
+        type: integer
+        required: true
+      - name: enrolled_at
+        type: datetime
+        required: true
+        default: "CURRENT_TIMESTAMP"
+
+  - name: Grade
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: enrollment_id
+        type: integer
+        required: true
+        unique: true
+      - name: score
+        type: float
+        required: true
+      - name: letter_grade
+        type: string
+        nullable: true
+        max_length: 5
+      - name: graded_at
+        type: datetime
+        nullable: true
+
+  - name: Assignment
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: course_id
+        type: integer
+        required: true
+      - name: title
+        type: string
+        required: true
+        max_length: 200
+      - name: description
+        type: string
+        nullable: true
+      - name: due_date
+        type: datetime
+        required: true
+      - name: max_score
+        type: integer
+        required: true
+        default: 100
+    relationships:
+      - type: many_to_one
+        target: Course
+        foreign_key: course_id
+
+business_rules:
+  - name: capacity_check
+    description: >
+      Prevent enrollment when the course has reached its maximum capacity.
+    severity: critical
+
+  - name: duplicate_enrollment
+    description: >
+      Prevent a student from enrolling in the same course more than once.
+    severity: critical
+
+  - name: student_role_check
+    description: >
+      Only users with role 'student' can enroll in courses. Only users with
+      role 'teacher' can be assigned as course instructors.
+    severity: critical
+
+  - name: grade_assignment
+    description: >
+      A grade can only be assigned to an existing enrollment. One enrollment
+      can have at most one grade.
+    severity: important
+
+  - name: credit_limit
+    description: >
+      A student cannot enroll in courses totaling more than 30 credits per semester.
+    severity: important
+
+  - name: assignment_deadline
+    description: >
+      Assignments submitted after the due date should be marked as late.
+    severity: nice_to_have

@@ -1,0 +1,47 @@
+"""
+Pydantic schemas for {{ model.name }}.
+Generated from model definition.
+"""
+from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel
+
+
+{% for entity in model.entities %}
+# --- {{ entity.name }} ---
+
+class {{ entity.name }}Base(BaseModel):
+{% for attr in entity.attributes %}
+{% if not attr.primary_key %}
+    {{ attr.name }}: {{ attr.type | py_type }}{% if attr.nullable or not attr.required %} | None = None{% endif %}
+{% endif %}
+{% endfor %}
+
+
+class {{ entity.name }}Create({{ entity.name }}Base):
+{% for attr in entity.attributes if attr.required and not attr.primary_key %}
+    {{ attr.name }}: {{ attr.type | py_type }}
+{% endfor %}
+    pass
+
+
+class {{ entity.name }}Update(BaseModel):
+{% for attr in entity.attributes %}
+{% if not attr.primary_key %}
+    {{ attr.name }}: {{ attr.type | py_type }}{% if attr.nullable or not attr.required %} | None = None{% endif %}{% if attr.default is not none %} = {{ attr.default }}{% endif %}
+{% endif %}
+{% endfor %}
+
+
+class {{ entity.name }}Response({{ entity.name }}Base):
+{% for attr in entity.attributes %}
+{% if attr.primary_key %}
+    {{ attr.name }}: {{ attr.type | py_type }}
+{% endif %}
+{% endfor %}
+
+    class Config:
+        from_attributes = True
+
+
+{% endfor %}

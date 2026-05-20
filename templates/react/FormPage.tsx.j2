@@ -1,0 +1,165 @@
+{% raw %}import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+{% endraw %}
+
+interface {{ entity.name }}FormData {
+{% for attr in entity.attributes %}
+{% if not attr.primary_key %}
+    {{ attr.name }}: {{ attr.type | ts_type }};
+{% endif %}
+{% endfor %}
+}
+
+export default function {{ entity.name }}FormPage() {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const isEdit = Boolean(id);
+
+    const [formData, setFormData] = useState<{{ entity.name }}FormData>({
+{% for attr in entity.attributes %}
+{% if not attr.primary_key %}
+{% if attr.type.value == 'integer' %}
+        {{ attr.name }}: {{ attr.default if attr.default is not none else 0 }},
+{% elif attr.type.value == 'float' %}
+        {{ attr.name }}: {{ attr.default if attr.default is not none else 0.0 }},
+{% elif attr.type.value == 'boolean' %}
+        {{ attr.name }}: {{ attr.default if attr.default is not none else 'false' }},
+{% elif attr.type.value == 'datetime' %}
+        {{ attr.name }}: '',
+{% else %}
+        {{ attr.name }}: '',
+{% endif %}
+{% endif %}
+{% endfor %}
+    });
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (isEdit) {
+            fetch(`http://localhost:8000/{{ entity.table_name }}/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    const fd: any = {};
+{% for attr in entity.attributes %}
+{% if not attr.primary_key %}
+                    fd.{{ attr.name }} = data.{{ attr.name }};
+{% endif %}
+{% endfor %}
+                    setFormData(fd);
+                })
+                .catch(e => setError(e.message));
+        }
+    }, [id]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        let value: any = e.target.value;
+{% for attr in entity.attributes %}
+{% if attr.type.value in ('integer', 'float') %}
+        if (e.target.name === '{{ attr.name }}') value = Number(value);
+{% endif %}
+{% if attr.type.value == 'boolean' %}
+        if (e.target.name === '{{ attr.name }}') value = e.target.value === 'true';
+{% endif %}
+{% endfor %}
+        setFormData({ ...formData, [e.target.name]: value });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+        setError(null);
+
+        const url = isEdit
+            ? `http://localhost:8000/{{ entity.table_name }}/${id}`
+            : `http://localhost:8000/{{ entity.table_name }}`;
+
+        try {
+            const res = await fetch(url, {
+                method: isEdit ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || `HTTP ${res.status}`);
+            }
+            navigate('/{{ entity.table_name }}');
+        } catch (e: any) {
+            setError(e.message);
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="max-w-lg mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">
+                {isEdit ? 'Edit' : 'Create'} {{ entity.name | to_title }}
+            </h1>
+
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded mb-4">
+                    {error}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+{% for attr in entity.attributes %}
+{% if not attr.primary_key %}
+                <div>
+                    <label className="block text-sm font-medium mb-1">
+                        {{ attr.name | to_title }}{% if attr.required %} *{% endif %}
+                    </label>
+                    {% if attr.type.value == 'boolean' %}
+                    <select
+                        name="{{ attr.name }}"
+                        value={String(formData.{{ attr.name }})}
+                        onChange={handleChange}
+                        className="w-full border rounded p-2"
+                    >
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                    {% elif attr.max_length and attr.max_length > 100 %}
+                    <textarea
+                        name="{{ attr.name }}"
+                        value={formData.{{ attr.name }}}
+                        onChange={handleChange}
+                        className="w-full border rounded p-2"
+                        rows={3}
+                        {% if attr.required %}required{% endif %}
+                    />
+                    {% else %}
+                    <input
+                        type="{% if attr.type.value == 'integer' or attr.type.value == 'float' %}number{% elif attr.type.value == 'datetime' %}datetime-local{% else %}text{% endif %}"
+                        name="{{ attr.name }}"
+                        value={formData.{{ attr.name }}}
+                        onChange={handleChange}
+                        className="w-full border rounded p-2"
+                        {% if attr.required %}required{% endif %}
+                    />
+                    {% endif %}
+                </div>
+{% endif %}
+{% endfor %}
+
+                <div className="flex gap-3">
+                    <button
+                        type="submit"
+                        disabled={saving}
+                        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+                    >
+                        {saving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => navigate('/{{ entity.table_name }}')}
+                        className="bg-gray-300 px-6 py-2 rounded hover:bg-gray-400"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+}

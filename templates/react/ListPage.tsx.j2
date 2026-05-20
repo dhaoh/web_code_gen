@@ -1,0 +1,96 @@
+{% raw %}import React, { useState, useEffect } from 'react';
+{% endraw %}
+
+interface {{ entity.name }}Item {
+{% for attr in entity.attributes %}
+    {{ attr.name }}: {{ attr.type | ts_type }};
+{% endfor %}
+}
+
+interface {{ entity.name }}ListPageProps {
+    apiBaseUrl: string;
+}
+
+export default function {{ entity.name }}ListPage({ apiBaseUrl }: {{ entity.name }}ListPageProps) {
+    const [items, setItems] = useState<{{ entity.name }}Item[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchItems = async () => {
+        try {
+            const res = await fetch(`${apiBaseUrl}/{{ entity.table_name }}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            setItems(data);
+            setLoading(false);
+        } catch (e: any) {
+            setError(e.message);
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchItems();
+    }, []);
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Delete this {{ entity.name }}?')) return;
+        try {
+            await fetch(`${apiBaseUrl}/{{ entity.table_name }}/${id}`, { method: 'DELETE' });
+            setItems(items.filter(i => i.id !== id));
+        } catch (e: any) {
+            alert('Failed to delete: ' + e.message);
+        }
+    };
+
+    if (loading) return <div className="p-4">Loading...</div>;
+    if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
+
+    return (
+        <div className="p-4">
+            <div className="flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-bold">{{ entity.name | to_title }}s</h1>
+                <a
+                    href={`/{{ entity.table_name }}/new`}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                    Create New
+                </a>
+            </div>
+
+            <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                    <tr className="bg-gray-100">
+{% for attr in entity.attributes %}
+                        <th className="border p-2 text-left">{{ attr.name | to_title }}</th>
+{% endfor %}
+                        <th className="border p-2 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {items.map(item => (
+                        <tr key={item.id} className="hover:bg-gray-50">
+{% for attr in entity.attributes %}
+                            <td className="border p-2">{String(item.{{ attr.name }})}</td>
+{% endfor %}
+                            <td className="border p-2">
+                                <a
+                                    href={`/{{ entity.table_name }}/${item.id}/edit`}
+                                    className="text-blue-500 mr-3 hover:underline"
+                                >
+                                    Edit
+                                </a>
+                                <button
+                                    onClick={() => handleDelete(item.id)}
+                                    className="text-red-500 hover:underline"
+                                >
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}

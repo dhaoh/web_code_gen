@@ -1,0 +1,77 @@
+# Small: Student + Course + Enrollment (3 entities, 3 relationships, 2 business rules)
+name: student_course_system_small
+description: >
+  A simple student course selection system. Students can browse available courses
+  and enroll. The system tracks enrollments and prevents over-capacity enrollment.
+
+entities:
+  - name: Student
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: name
+        type: string
+        required: true
+        max_length: 100
+      - name: email
+        type: string
+        required: true
+        unique: true
+        max_length: 200
+    relationships:
+      - type: many_to_many
+        target: Course
+        through: Enrollment
+
+  - name: Course
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: title
+        type: string
+        required: true
+        max_length: 200
+      - name: description
+        type: string
+        nullable: true
+      - name: capacity
+        type: integer
+        required: true
+        default: 30
+    relationships:
+      - type: many_to_many
+        target: Student
+        through: Enrollment
+
+  - name: Enrollment
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: student_id
+        type: integer
+        required: true
+      - name: course_id
+        type: integer
+        required: true
+      - name: enrolled_at
+        type: datetime
+        required: true
+        default: "CURRENT_TIMESTAMP"
+
+business_rules:
+  - name: capacity_check
+    description: >
+      Prevent enrollment when the course has reached its maximum capacity.
+      The system must count current enrollments and compare against course.capacity
+      before allowing a new enrollment.
+    severity: critical
+
+  - name: duplicate_enrollment
+    description: >
+      Prevent a student from enrolling in the same course more than once.
+      The system must check for existing enrollment with the same student_id
+      and course_id before creating a new one.
+    severity: critical

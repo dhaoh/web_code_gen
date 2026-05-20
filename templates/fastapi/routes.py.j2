@@ -1,0 +1,97 @@
+"""
+API routes for {{ model.name }}.
+Generated from model definition.
+"""
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from .models import (
+{% for entity in model.entities %}
+    {{ entity.name }},
+{% endfor %}
+    get_session,
+)
+from .schemas import (
+{% for entity in model.entities %}
+    {{ entity.name }}Create,
+    {{ entity.name }}Update,
+    {{ entity.name }}Response,
+{% endfor %}
+)
+
+{% set ns = namespace(router_count=0) %}
+{% for entity in model.entities %}
+{% set ns.router_count = ns.router_count + 1 %}
+router_{{ ns.router_count }} = APIRouter(prefix="/{{ entity.table_name }}", tags=["{{ entity.name | to_title }}"])
+
+
+@router_{{ ns.router_count }}.get("/", response_model=List[{{ entity.name }}Response])
+def list_{{ entity.table_name }}(session: Session = Depends(get_session)):
+    """List all {{ entity.table_name }}."""
+    items = session.query({{ entity.name }}).all()
+    return items
+
+
+@router_{{ ns.router_count }}.get("/{item_id}", response_model={{ entity.name }}Response)
+def get_{{ entity.table_name[:-1] }}(item_id: int, session: Session = Depends(get_session)):
+    """Get a specific {{ entity.name }} by ID."""
+    item = session.query({{ entity.name }}).filter({{ entity.name }}.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="{{ entity.name }} not found")
+    return item
+
+
+@router_{{ ns.router_count }}.post("/", response_model={{ entity.name }}Response, status_code=status.HTTP_201_CREATED)
+def create_{{ entity.table_name[:-1] }}(data: {{ entity.name }}Create, session: Session = Depends(get_session)):
+    """Create a new {{ entity.name }}."""
+{% for rel in entity.relationships %}
+{% if rel.type.value == 'many_to_many' and rel.through %}
+    # LLM_FILL: Check for existing {{ rel.through }} with same keys (duplicate check)
+{% endif %}
+{% endfor %}
+{% for rule in model.business_rules %}
+{% if entity.name.lower() in rule.description.lower() or rule.name.lower() in entity.name.lower() %}
+    # LLM_FILL: Apply business rule: {{ rule.description | truncate(100) }}
+{% endif %}
+{% endfor %}
+    # LLM_FILL: Validate create_{{ entity.table_name[:-1] }} logic
+    item = {{ entity.name }}(**data.model_dump())
+    session.add(item)
+    session.commit()
+    session.refresh(item)
+    return item
+
+
+@router_{{ ns.router_count }}.put("/{item_id}", response_model={{ entity.name }}Response)
+def update_{{ entity.table_name[:-1] }}(item_id: int, data: {{ entity.name }}Update, session: Session = Depends(get_session)):
+    """Update an existing {{ entity.name }}."""
+    item = session.query({{ entity.name }}).filter({{ entity.name }}.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="{{ entity.name }} not found")
+    # LLM_FILL: Validate update_{{ entity.table_name[:-1] }} logic
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(item, key, value)
+    session.commit()
+    session.refresh(item)
+    return item
+
+
+@router_{{ ns.router_count }}.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_{{ entity.table_name[:-1] }}(item_id: int, session: Session = Depends(get_session)):
+    """Delete a {{ entity.name }}."""
+    item = session.query({{ entity.name }}).filter({{ entity.name }}.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="{{ entity.name }} not found")
+    # LLM_FILL: Validate delete_{{ entity.table_name[:-1] }} logic (cascade checks)
+    session.delete(item)
+    session.commit()
+
+
+{% endfor %}
+# Collect all routers
+routers = [
+{% for i in range(1, ns.router_count + 1) %}
+    router_{{ i }},
+{% endfor %}
+]

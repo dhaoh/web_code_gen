@@ -1,0 +1,39 @@
+-- Generated from model: {{ model.name }}
+-- {{ model.description }}
+-- Generation timestamp: {{ now }}
+
+{% for entity in model.entities %}
+-- ==========================================
+-- Table: {{ entity.table_name }}
+-- ==========================================
+CREATE TABLE IF NOT EXISTS {{ entity.table_name }} (
+{% for attr in entity.attributes %}
+    {{ attr.name }} {{ attr.type | sql_type }}{% if attr.primary_key %} PRIMARY KEY AUTOINCREMENT{% endif %}{% if attr.unique %} UNIQUE{% endif %}{% if attr.required and not attr.primary_key %} NOT NULL{% endif %}{% if attr.nullable and not attr.primary_key %} DEFAULT NULL{% endif %}{% if attr.default is not none and not attr.primary_key and attr.default != "CURRENT_TIMESTAMP" %} DEFAULT {{ attr.default }}{% endif %}{% if attr.default == "CURRENT_TIMESTAMP" %} DEFAULT CURRENT_TIMESTAMP{% endif %}{% if not loop.last %},{% endif %}
+
+{% endfor %}
+);
+
+{% endfor %}
+-- ==========================================
+-- Foreign Key Constraints
+-- ==========================================
+{% for entity in model.entities %}
+{% for rel in entity.relationships %}
+{% if rel.type.value in ('many_to_one',) and rel.foreign_key %}
+-- {{ entity.name }}.{{ rel.foreign_key }} -> {{ rel.target | plural }}
+-- ALTER TABLE {{ entity.table_name }} ADD CONSTRAINT fk_{{ entity.table_name }}_{{ rel.foreign_key }}
+--     FOREIGN KEY ({{ rel.foreign_key }}) REFERENCES {{ rel.target | plural }}(id);
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+-- ==========================================
+-- Junction Tables (Many-to-Many)
+-- ==========================================
+{% for entity in model.entities %}
+{% for rel in entity.relationships %}
+{% if rel.type.value == 'many_to_many' and rel.through %}
+-- Junction table '{{ rel.through | plural }}' already handled in entity definition above.
+{% endif %}
+{% endfor %}
+{% endfor %}

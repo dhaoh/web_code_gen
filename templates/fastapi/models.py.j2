@@ -1,0 +1,65 @@
+"""
+Database models for {{ model.name }}.
+Generated from model definition.
+"""
+from datetime import datetime
+from typing import Optional
+
+from sqlalchemy import (
+    Column, Integer, String, Float, Boolean, DateTime,
+    ForeignKey, create_engine, UniqueConstraint
+)
+from sqlalchemy.orm import DeclarativeBase, relationship, Session
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+{% for entity in model.entities %}
+class {{ entity.name }}(Base):
+    __tablename__ = "{{ entity.table_name }}"
+
+{% for attr in entity.attributes %}
+    {{ attr.name }} = Column(
+        {{ attr.type | sql_type }},
+{% if attr.primary_key %}
+        primary_key=True,
+        autoincrement=True,
+{% endif %}
+{% if attr.unique %}
+        unique=True,
+{% endif %}
+{% if attr.required and not attr.primary_key %}
+        nullable=False,
+{% endif %}
+{% if attr.nullable and not attr.primary_key %}
+        nullable=True,
+{% endif %}
+{% if attr.default is not none and attr.default != "CURRENT_TIMESTAMP" %}
+        default={{ attr.default }},
+{% endif %}
+{% if attr.default == "CURRENT_TIMESTAMP" %}
+        default=datetime.utcnow,
+{% endif %}
+    )
+{% endfor %}
+
+{% for rel in entity.relationships %}
+{% if rel.type.value == 'many_to_one' and rel.foreign_key %}
+    # Relationship: {{ entity.name }} -> {{ rel.target }}
+{% endif %}
+{% endfor %}
+
+{% endfor %}
+
+# Database setup
+engine = create_engine("sqlite:///./app.db", echo=False)
+
+
+def init_db():
+    Base.metadata.create_all(engine)
+
+
+def get_session() -> Session:
+    return Session(engine)

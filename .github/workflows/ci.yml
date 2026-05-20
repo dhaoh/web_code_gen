@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff
+
+      - name: Lint with ruff
+        run: ruff check src/ tests/ --ignore=E501,F841
+
+      - name: Run tests (exclude LLM integration tests)
+        run: |
+          pytest tests/ -v --ignore=tests/test_baseline.py -k "not test_llm"
+
+      - name: Verify parser works on all models
+        run: |
+          python -c "
+          from src.parser.parser import parse_model
+          for size in ['small', 'medium', 'large']:
+              m = parse_model(f'models/{size}.yaml')
+              assert m.validate_references() == [], f'{size} has ref errors'
+              print(f'{size}: {len(m.entities)} entities, {len(m.business_rules)} rules OK')
+          "
+
+      - name: Verify generators produce output
+        run: |
+          python -c "
+          import tempfile
+          from src.parser.parser import parse_model
+          from src.generator.sql_generator import generate_sql
+          from src.generator.api_generator import generate_api
+          from src.generator.ui_generator import generate_ui
+
+          for size in ['small', 'medium', 'large']:
+              m = parse_model(f'models/{size}.yaml')
+              with tempfile.TemporaryDirectory() as tmp:
+                  generate_sql(m, tmp)
+                  generate_api(m, tmp)
+                  generate_ui(m, tmp)
+              print(f'{size}: all generators passed')
+          "

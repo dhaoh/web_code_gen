@@ -1,0 +1,204 @@
+[
+  {
+    "method": "model_driven",
+    "model": "small",
+    "run_id": 0,
+    "elapsed_seconds": 62.32,
+    "feedback_iterations": 3,
+    "feedback_pass": false,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 15,
+      "frontend_components": 7,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "small",
+    "run_id": 1,
+    "elapsed_seconds": 61.06,
+    "feedback_iterations": 3,
+    "feedback_pass": false,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 15,
+      "frontend_components": 7,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "small",
+    "run_id": 2,
+    "elapsed_seconds": 57.67,
+    "feedback_iterations": 3,
+    "feedback_pass": false,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 15,
+      "frontend_components": 7,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "small",
+    "num_runs": 3,
+    "average_similarity": 0.9631,
+    "total_files": 13,
+    "file_scores": [
+      0.9236,
+      0.728,
+      0.8738,
+      0.9946,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  {
+    "method": "pure_llm",
+    "model": "small",
+    "run_id": 0,
+    "elapsed_seconds": 70.52,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.8,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 16,
+      "frontend_components": 2,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "small",
+    "run_id": 1,
+    "elapsed_seconds": 56.87,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.75,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 16,
+      "frontend_components": 1,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "small",
+    "run_id": 2,
+    "elapsed_seconds": 69.83,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 14,
+      "frontend_components": 8,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "small",
+    "num_runs": 3,
+    "average_similarity": 0.3773,
+    "total_files": 9,
+    "file_scores": [
+      0.7879,
+      0.7904,
+      0.1044,
+      0.5056,
+      0.3967,
+      0.0534,
+      0.0927,
+      0.3333,
+      0.3313
+    ]
+  }
+]

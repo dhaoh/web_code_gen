@@ -1,0 +1,330 @@
+# Large: 10 entities, 10+ relationships, 10 business rules
+name: student_course_system_large
+description: >
+  A comprehensive university course management system with users, departments,
+  programs, courses, prerequisites, classrooms, schedules, enrollments,
+  grades, and assignments.
+
+entities:
+  - name: User
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: username
+        type: string
+        required: true
+        unique: true
+        max_length: 50
+      - name: password_hash
+        type: string
+        required: true
+      - name: role
+        type: string
+        required: true
+      - name: full_name
+        type: string
+        required: true
+        max_length: 100
+      - name: email
+        type: string
+        required: true
+        unique: true
+        max_length: 200
+      - name: major_id
+        type: integer
+        nullable: true
+    relationships:
+      - type: many_to_one
+        target: Major
+        foreign_key: major_id
+
+  - name: Department
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: name
+        type: string
+        required: true
+        unique: true
+        max_length: 100
+      - name: code
+        type: string
+        required: true
+        unique: true
+        max_length: 20
+      - name: head_user_id
+        type: integer
+        nullable: true
+    relationships:
+      - type: many_to_one
+        target: User
+        foreign_key: head_user_id
+      - type: one_to_many
+        target: Course
+        back_populates: department
+      - type: one_to_many
+        target: Major
+        back_populates: department
+
+  - name: Major
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: name
+        type: string
+        required: true
+        max_length: 100
+      - name: code
+        type: string
+        required: true
+        unique: true
+        max_length: 20
+      - name: department_id
+        type: integer
+        required: true
+      - name: total_credits_required
+        type: integer
+        required: true
+        default: 120
+    relationships:
+      - type: many_to_one
+        target: Department
+        foreign_key: department_id
+
+  - name: Course
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: title
+        type: string
+        required: true
+        max_length: 200
+      - name: code
+        type: string
+        required: true
+        unique: true
+        max_length: 20
+      - name: description
+        type: string
+        nullable: true
+      - name: capacity
+        type: integer
+        required: true
+        default: 30
+      - name: credits
+        type: integer
+        required: true
+        default: 3
+      - name: department_id
+        type: integer
+        required: true
+      - name: teacher_id
+        type: integer
+        required: true
+      - name: classroom_id
+        type: integer
+        nullable: true
+      - name: semester
+        type: string
+        required: true
+        max_length: 20
+    relationships:
+      - type: many_to_one
+        target: Department
+        foreign_key: department_id
+      - type: many_to_one
+        target: User
+        foreign_key: teacher_id
+      - type: many_to_one
+        target: Classroom
+        foreign_key: classroom_id
+      - type: many_to_many
+        target: User
+        through: Enrollment
+      - type: many_to_many
+        target: Schedule
+        through: CourseSchedule
+
+  - name: Prerequisite
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: course_id
+        type: integer
+        required: true
+      - name: prerequisite_course_id
+        type: integer
+        required: true
+      - name: is_mandatory
+        type: boolean
+        required: true
+        default: true
+
+  - name: Classroom
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: building
+        type: string
+        required: true
+        max_length: 50
+      - name: room_number
+        type: string
+        required: true
+        max_length: 20
+      - name: capacity
+        type: integer
+        required: true
+
+  - name: Schedule
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: day_of_week
+        type: integer
+        required: true
+      - name: start_time
+        type: string
+        required: true
+      - name: end_time
+        type: string
+        required: true
+
+  - name: CourseSchedule
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: course_id
+        type: integer
+        required: true
+      - name: schedule_id
+        type: integer
+        required: true
+
+  - name: Enrollment
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: student_id
+        type: integer
+        required: true
+      - name: course_id
+        type: integer
+        required: true
+      - name: enrolled_at
+        type: datetime
+        required: true
+        default: "CURRENT_TIMESTAMP"
+      - name: status
+        type: string
+        required: true
+        default: "active"
+
+  - name: Grade
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: enrollment_id
+        type: integer
+        required: true
+        unique: true
+      - name: score
+        type: float
+        required: true
+      - name: letter_grade
+        type: string
+        nullable: true
+        max_length: 5
+      - name: graded_at
+        type: datetime
+        nullable: true
+      - name: graded_by
+        type: integer
+        nullable: true
+
+  - name: Assignment
+    attributes:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: course_id
+        type: integer
+        required: true
+      - name: title
+        type: string
+        required: true
+        max_length: 200
+      - name: description
+        type: string
+        nullable: true
+      - name: due_date
+        type: datetime
+        required: true
+      - name: max_score
+        type: integer
+        required: true
+        default: 100
+
+business_rules:
+  - name: capacity_check
+    description: Prevent enrollment when course has reached maximum capacity.
+    severity: critical
+
+  - name: duplicate_enrollment
+    description: Prevent a student from enrolling in the same course twice.
+    severity: critical
+
+  - name: role_based_access
+    description: >
+      Only students can enroll in courses. Only teachers can be assigned as
+      instructors. Only department heads can manage department courses.
+    severity: critical
+
+  - name: prerequisite_check
+    description: >
+      A student must have completed all mandatory prerequisites before
+      enrolling in a course. Non-mandatory prerequisites should show a warning.
+    severity: critical
+
+  - name: schedule_conflict
+    description: >
+      A student cannot enroll in courses that have overlapping schedules.
+    severity: critical
+
+  - name: credit_limit
+    description: >
+      A student cannot enroll in courses totaling more than 30 credits per semester.
+    severity: important
+
+  - name: grade_integrity
+    description: >
+      A grade can only be assigned to an existing enrollment. One enrollment
+      gets at most one grade. Only the course instructor can assign grades.
+    severity: important
+
+  - name: classroom_capacity
+    description: >
+      Course enrollment cannot exceed the assigned classroom capacity.
+    severity: important
+
+  - name: major_requirements
+    description: >
+      Students must complete all courses required by their major program.
+      The system should track progress against major requirements.
+    severity: important
+
+  - name: assignment_deadline
+    description: >
+      Assignments submitted after the due date but within 24 hours are marked
+      late (-10%). After 24 hours, submissions are not accepted.
+    severity: nice_to_have
