@@ -5,6 +5,8 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from src.evaluator import iter_code_files
+
 from src.config import MAX_FEEDBACK_ITERATIONS
 from src.llm.client import call_llm
 from src.llm.prompts import FEEDBACK_FIX_PROMPT, build_model_context
@@ -50,7 +52,7 @@ def _check_code(code_dir: Path) -> dict[str, list[str]]:
     """Check code for errors. Returns {filename: [error_messages]}."""
     file_errors: dict[str, list[str]] = {}
 
-    for py_file in sorted(code_dir.glob("**/*.py")):
+    for py_file in sorted(iter_code_files(code_dir, "*.py")):
         try:
             result = subprocess.run(
                 [sys.executable, "-m", "py_compile", str(py_file)],
@@ -69,7 +71,7 @@ def _check_code(code_dir: Path) -> dict[str, list[str]]:
     main_py = code_dir / "main.py"
     if not main_py.exists():
         # Search recursively
-        candidates = list(code_dir.rglob("main.py"))
+        candidates = list(iter_code_files(code_dir, "main.py"))
         if candidates:
             main_py = candidates[0]
 
@@ -91,7 +93,7 @@ def _check_code(code_dir: Path) -> dict[str, list[str]]:
             if result.returncode != 0:
                 err_msg = result.stderr.strip()
                 # Try to determine which file caused the import error
-                for py_file in sorted(code_dir.glob("**/*.py")):
+                for py_file in sorted(iter_code_files(code_dir, "*.py")):
                     if py_file.name in err_msg:
                         file_errors.setdefault(str(py_file), []).append(
                             f"Import: {err_msg[:500]}"

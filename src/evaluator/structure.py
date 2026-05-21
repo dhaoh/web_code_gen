@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from src.evaluator import iter_code_files
 from src.parser.ir import ModelIR
 
 
@@ -38,7 +39,7 @@ def evaluate_structure(model: ModelIR, code_dir: str | Path) -> StructureScore:
     expected_components = expected_entities * 2  # List + Form per entity
 
     # Check generated files
-    python_files = list(code_dir.glob("**/*.py"))
+    python_files = list(iter_code_files(code_dir, "*.py"))
     combined_content = ""
     for f in python_files:
         combined_content += f.read_text(encoding="utf-8", errors="ignore") + "\n"
@@ -61,7 +62,7 @@ def evaluate_structure(model: ModelIR, code_dir: str | Path) -> StructureScore:
     routes_found = len(route_pattern.findall(combined_content))
 
     # Count frontend components
-    tsx_files = list(code_dir.glob("**/*.tsx")) + list(code_dir.glob("**/*.jsx"))
+    tsx_files = list(iter_code_files(code_dir, "*.tsx")) + list(iter_code_files(code_dir, "*.jsx"))
     component_count = len(tsx_files)
 
     score.entity_count_match = entities_found >= expected_entities

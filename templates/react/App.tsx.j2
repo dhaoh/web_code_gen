@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 {% for entity in model.entities %}
 import {{ entity.name }}ListPage from './pages/{{ entity.name }}ListPage';
 import {{ entity.name }}FormPage from './pages/{{ entity.name }}FormPage';
@@ -9,22 +9,48 @@ const API_BASE = 'http://localhost:8000';
 function App() {
     return (
         <BrowserRouter>
-            <div className="min-h-screen bg-gray-50">
-                <nav className="bg-white shadow-sm border-b">
-                    <div className="max-w-6xl mx-auto flex gap-6 p-4">
-                        <Link to="/" className="font-bold text-lg">
-                            {{ model.name | replace('_', ' ') | title }}
-                        </Link>
-{% for entity in model.entities %}
-                        <Link to="/{{ entity.table_name }}" className="text-gray-600 hover:text-gray-900">
-                            {{ entity.name | to_title }}
-                        </Link>
-{% endfor %}
+            <div className="flex h-screen overflow-hidden">
+                {/* Sidebar */}
+                <aside className="w-64 bg-slate-900 text-white flex flex-col shrink-0">
+                    <div className="p-5 border-b border-slate-700">
+                        <h1 className="text-lg font-bold tracking-tight">
+                            ⚙️ {{ model.name | replace('_', ' ') | title }}
+                        </h1>
                     </div>
-                </nav>
-                <main className="max-w-6xl mx-auto">
+                    <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+                        <NavLink
+                            to="/"
+                            end
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+                                    isActive ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                                }`
+                            }
+                        >
+                            <span className="text-base">🏠</span> Dashboard
+                        </NavLink>
+{% for entity in model.entities %}
+                        <NavLink
+                            to="/{{ entity.table_name }}"
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+                                    isActive ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                                }`
+                            }
+                        >
+                            <span className="text-base">{{ entity.name | to_title }}</span>
+                        </NavLink>
+{% endfor %}
+                    </nav>
+                    <div className="p-4 border-t border-slate-700 text-xs text-slate-500">
+                        Generated via Model-Driven Approach
+                    </div>
+                </aside>
+
+                {/* Main content */}
+                <main className="flex-1 overflow-y-auto bg-slate-100">
                     <Routes>
-                        <Route path="/" element={<HomePage />} />
+                        <Route path="/" element={<Dashboard />} />
 {% for entity in model.entities %}
                         <Route path="/{{ entity.table_name }}" element={<{{ entity.name }}ListPage apiBaseUrl={API_BASE} />} />
                         <Route path="/{{ entity.table_name }}/new" element={<{{ entity.name }}FormPage />} />
@@ -37,26 +63,63 @@ function App() {
     );
 }
 
-function HomePage() {
+function Dashboard() {
     return (
         <div className="p-8">
-            <h1 className="text-3xl font-bold mb-4">{{ model.name | replace('_', ' ') | title }}</h1>
-            <p className="text-gray-600 mb-6">{{ model.description }}</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+                <p className="text-slate-500 mt-1">{{ model.description | truncate(150) }}</p>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-5 mb-8">
 {% for entity in model.entities %}
-                <Link
-                    to="/{{ entity.table_name }}"
-                    className="block p-4 bg-white rounded-lg shadow hover:shadow-md transition"
-                >
-                    <h2 className="text-xl font-semibold">{{ entity.name | to_title }}s</h2>
-                    <p className="text-gray-500 text-sm mt-1">
-                        {{ entity.attributes | length }} fields
-                        {% if entity.attributes | selectattr('primary_key') | first %}
-                        (ID: {{ (entity.attributes | selectattr('primary_key') | first).name }})
-                        {% endif %}
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-2xl">{{ entity.name | to_title }}</span>
+                        <span className="text-3xl">
+{% if 'student' in entity.name.lower() %}👤{% elif 'course' in entity.name.lower() %}📚{% elif 'enrollment' in entity.name.lower() %}📋{% elif 'user' in entity.name.lower() %}👥{% elif 'department' in entity.name.lower() %}🏛️{% elif 'grade' in entity.name.lower() %}📊{% elif 'teacher' in entity.name.lower() %}👨‍🏫{% elif 'assignment' in entity.name.lower() %}📝{% elif 'classroom' in entity.name.lower() %}🏫{% elif 'schedule' in entity.name.lower() %}📅{% else %}📦{% endif %}
+                        </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mb-3">
+                        {{ entity.attributes | length }} attribute{% if entity.attributes | length != 1 %}s{% endif %}
+                        {% if entity.relationships %}&middot; {{ entity.relationships | length }} relation{% if entity.relationships | length != 1 %}s{% endif %}{% endif %}
                     </p>
-                </Link>
+                    <a
+                        href="/{{ entity.table_name }}"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition"
+                    >
+                        Manage <span className="text-xs">→</span>
+                    </a>
+                </div>
 {% endfor %}
+            </div>
+
+            {/* Business Rules */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h2 className="text-lg font-semibold text-slate-900 mb-4">🏷️ Business Rules</h2>
+                <div className="space-y-3">
+{% for rule in model.business_rules %}
+{% if rule.severity.value == 'critical' %}
+{% set dot_color = 'bg-red-500' %}
+{% set badge_color = 'bg-red-100 text-red-700' %}
+{% elif rule.severity.value == 'important' %}
+{% set dot_color = 'bg-amber-500' %}
+{% set badge_color = 'bg-amber-100 text-amber-700' %}
+{% else %}
+{% set dot_color = 'bg-blue-400' %}
+{% set badge_color = 'bg-blue-100 text-blue-700' %}
+{% endif %}
+                    <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                        <span className={`mt-0.5 w-2 h-2 rounded-full shrink-0 {{ dot_color }}`}></span>
+                        <div>
+                            <span className="text-sm font-semibold text-slate-800">{{ rule.name | replace('_', ' ') | title }}</span>
+                            <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-medium uppercase {{ badge_color }}`}>{{ rule.severity.value }}</span>
+                            <p className="text-xs text-slate-500 mt-0.5">{{ rule.description | truncate(200) }}</p>
+                        </div>
+                    </div>
+{% endfor %}
+                </div>
             </div>
         </div>
     );

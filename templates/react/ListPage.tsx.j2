@@ -14,82 +14,189 @@ export default function {{ entity.name }}ListPage({ apiBaseUrl }: {{ entity.name
     const [items, setItems] = useState<{{ entity.name }}Item[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [search, setSearch] = useState('');
 
     const fetchItems = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const res = await fetch(`${apiBaseUrl}/{{ entity.table_name }}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             setItems(data);
-            setLoading(false);
         } catch (e: any) {
             setError(e.message);
+        } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchItems();
-    }, []);
+    useEffect(() => { fetchItems(); }, []);
 
     const handleDelete = async (id: number) => {
-        if (!confirm('Delete this {{ entity.name }}?')) return;
+        if (!confirm('Permanently delete this {{ entity.name | lower }}?')) return;
         try {
-            await fetch(`${apiBaseUrl}/{{ entity.table_name }}/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${apiBaseUrl}/{{ entity.table_name }}/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             setItems(items.filter(i => i.id !== id));
         } catch (e: any) {
-            alert('Failed to delete: ' + e.message);
+            alert('Delete failed: ' + e.message);
         }
     };
 
-    if (loading) return <div className="p-4">Loading...</div>;
-    if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
+    const filtered = items.filter(item =>
+        Object.values(item).some(v =>
+            String(v).toLowerCase().includes(search.toLowerCase())
+        )
+    );
 
     return (
-        <div className="p-4">
-            <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold">{{ entity.name | to_title }}s</h1>
+        <div className="p-6 max-w-7xl">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">{{ entity.name | to_title }}s</h1>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                        {filtered.length} of {items.length} record{items.length !== 1 ? 's' : ''}
+                    </p>
+                </div>
                 <a
                     href={`/{{ entity.table_name }}/new`}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm"
                 >
-                    Create New
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add {{ entity.name | to_title }}
                 </a>
             </div>
 
-            <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                    <tr className="bg-gray-100">
+            {/* Search */}
+            <div className="mb-4">
+                <div className="relative max-w-sm">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                    />
+                </div>
+            </div>
+
+            {/* States */}
+            {loading && (
+                <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+                    <div className="inline-block w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
+                    <p className="text-slate-500 text-sm">Loading {{ entity.table_name }}...</p>
+                </div>
+            )}
+
+            {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+                    <span className="text-red-500 text-lg">⚠️</span>
+                    <div>
+                        <p className="text-red-800 text-sm font-medium">Failed to load data</p>
+                        <p className="text-red-600 text-xs mt-0.5">{error}</p>
+                    </div>
+                    <button onClick={fetchItems} className="ml-auto text-sm text-red-600 hover:text-red-800 font-medium">
+                        Retry
+                    </button>
+                </div>
+            )}
+
+            {!loading && !error && filtered.length === 0 && (
+                <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+                    <span className="text-4xl block mb-3">
+                        {search ? '🔍' : '📭'}
+                    </span>
+                    <p className="text-slate-600 font-medium">
+                        {search ? 'No matching records found' : 'No {{ entity.table_name }} yet'}
+                    </p>
+                    <p className="text-slate-400 text-sm mt-1">
+                        {search ? 'Try a different search term' : 'Create your first {{ entity.name | lower }} to get started'}
+                    </p>
+                    {!search && (
+                        <a href={`/{{ entity.table_name }}/new`} className="inline-block mt-4 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+                            + Add {{ entity.name | to_title }}
+                        </a>
+                    )}
+                </div>
+            )}
+
+            {/* Table */}
+            {!loading && !error && filtered.length > 0 && (
+                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200">
 {% for attr in entity.attributes %}
-                        <th className="border p-2 text-left">{{ attr.name | to_title }}</th>
+                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        {{ attr.name | replace('_', ' ') | title }}
+                                    </th>
 {% endfor %}
-                        <th className="border p-2 text-left">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items.map(item => (
-                        <tr key={item.id} className="hover:bg-gray-50">
+                                    <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filtered.map((item, idx) => (
+                                    <tr key={item.id} className={`hover:bg-slate-50 transition ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
 {% for attr in entity.attributes %}
-                            <td className="border p-2">{String(item.{{ attr.name }})}</td>
+{% if attr.primary_key %}
+                                        <td className="px-5 py-3 text-sm font-mono text-slate-400">#{String(item.{{ attr.name }})}</td>
+{% elif attr.type.value == 'boolean' %}
+                                        <td className="px-5 py-3">
+                                            <span className={`inline-flex text-xs font-medium px-2 py-0.5 rounded-full ${item.{{ attr.name }} ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                {item.{{ attr.name }} ? 'Yes' : 'No'}
+                                            </span>
+                                        </td>
+{% elif attr.type.value == 'datetime' %}
+                                        <td className="px-5 py-3 text-sm text-slate-600">
+                                            {item.{{ attr.name }} ? new Date(item.{{ attr.name }}).toLocaleDateString() : '—'}
+                                        </td>
+{% elif attr.name == 'email' %}
+                                        <td className="px-5 py-3 text-sm text-indigo-600">{String(item.{{ attr.name }})}</td>
+{% else %}
+                                        <td className="px-5 py-3 text-sm text-slate-700">
+                                            {item.{{ attr.name }} != null ? String(item.{{ attr.name }}) : <span className="text-slate-300">—</span>}
+                                        </td>
+{% endif %}
 {% endfor %}
-                            <td className="border p-2">
-                                <a
-                                    href={`/{{ entity.table_name }}/${item.id}/edit`}
-                                    className="text-blue-500 mr-3 hover:underline"
-                                >
-                                    Edit
-                                </a>
-                                <button
-                                    onClick={() => handleDelete(item.id)}
-                                    className="text-red-500 hover:underline"
-                                >
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                                        <td className="px-5 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <a
+                                                    href={`/{{ entity.table_name }}/${item.id}/edit`}
+                                                    className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                                                    title="Edit"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </a>
+                                                <button
+                                                    onClick={() => handleDelete(item.id)}
+                                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                    title="Delete"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 from src.llm.client import call_llm
-from src.llm.prompts import BASELINE_SYSTEM_PROMPT, build_model_context
+from src.llm.prompts import BASELINE_SYSTEM_PROMPT
 from src.parser.ir import ModelIR
 
 
@@ -14,7 +14,6 @@ def generate_from_description(
     *,
     temperature: float = 0.3,
 ) -> Path:
-    model_context = build_model_context(model)
     nl_description = _build_nl_description(model)
 
     response = call_llm(

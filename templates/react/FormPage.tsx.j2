@@ -22,11 +22,11 @@ export default function {{ entity.name }}FormPage() {
 {% elif attr.type.value == 'float' %}
         {{ attr.name }}: {{ attr.default if attr.default is not none else 0.0 }},
 {% elif attr.type.value == 'boolean' %}
-        {{ attr.name }}: {{ attr.default if attr.default is not none else 'false' }},
+        {{ attr.name }}: {{ 'true' if attr.default and attr.default != 'CURRENT_TIMESTAMP' else 'false' }},
 {% elif attr.type.value == 'datetime' %}
         {{ attr.name }}: '',
 {% else %}
-        {{ attr.name }}: '',
+        {{ attr.name }}: {{ py_default(attr.type.value, attr.default) if attr.default is not none and attr.default != 'CURRENT_TIMESTAMP' else "''" }},
 {% endif %}
 {% endif %}
 {% endfor %}
@@ -37,12 +37,15 @@ export default function {{ entity.name }}FormPage() {
     useEffect(() => {
         if (isEdit) {
             fetch(`http://localhost:8000/{{ entity.table_name }}/${id}`)
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
                 .then(data => {
                     const fd: any = {};
 {% for attr in entity.attributes %}
 {% if not attr.primary_key %}
-                    fd.{{ attr.name }} = data.{{ attr.name }};
+                    fd.{{ attr.name }} = data.{{ attr.name }} ?? formData.{{ attr.name }};
 {% endif %}
 {% endfor %}
                     setFormData(fd);
@@ -55,7 +58,7 @@ export default function {{ entity.name }}FormPage() {
         let value: any = e.target.value;
 {% for attr in entity.attributes %}
 {% if attr.type.value in ('integer', 'float') %}
-        if (e.target.name === '{{ attr.name }}') value = Number(value);
+        if (e.target.name === '{{ attr.name }}') value = value === '' ? null : Number(value);
 {% endif %}
 {% if attr.type.value == 'boolean' %}
         if (e.target.name === '{{ attr.name }}') value = e.target.value === 'true';
@@ -80,8 +83,8 @@ export default function {{ entity.name }}FormPage() {
                 body: JSON.stringify(formData),
             });
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.detail || `HTTP ${res.status}`);
+                const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+                throw new Error(err.detail || `Request failed with status ${res.status}`);
             }
             navigate('/{{ entity.table_name }}');
         } catch (e: any) {
@@ -91,72 +94,135 @@ export default function {{ entity.name }}FormPage() {
     };
 
     return (
-        <div className="max-w-lg mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">
-                {isEdit ? 'Edit' : 'Create'} {{ entity.name | to_title }}
-            </h1>
+        <div className="p-6 max-w-2xl">
+            {/* Header */}
+            <div className="mb-6">
+                <button
+                    onClick={() => navigate('/{{ entity.table_name }}')}
+                    className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition mb-3"
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to {{ entity.table_name }}
+                </button>
+                <h1 className="text-2xl font-bold text-slate-900">
+                    {isEdit ? 'Edit' : 'Create New'} {{ entity.name | to_title }}
+                </h1>
+                <p className="text-sm text-slate-500 mt-1">
+                    {isEdit ? 'Update the fields below' : 'Fill in the details below to create a new record'}
+                </p>
+            </div>
 
+            {/* Error */}
             {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded mb-4">
-                    {error}
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 mb-6">
+                    <span className="text-red-500 text-lg shrink-0">⚠️</span>
+                    <div className="flex-1">
+                        <p className="text-red-800 text-sm font-medium">An error occurred</p>
+                        <p className="text-red-600 text-xs mt-0.5">{error}</p>
+                    </div>
+                    <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Form */}
+            <form onSubmit={handleSubmit}>
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                        <h2 className="text-sm font-semibold text-slate-700">{{ entity.name | to_title }} Details</h2>
+                    </div>
+                    <div className="p-6 space-y-5">
 {% for attr in entity.attributes %}
 {% if not attr.primary_key %}
-                <div>
-                    <label className="block text-sm font-medium mb-1">
-                        {{ attr.name | to_title }}{% if attr.required %} *{% endif %}
-                    </label>
-                    {% if attr.type.value == 'boolean' %}
-                    <select
-                        name="{{ attr.name }}"
-                        value={String(formData.{{ attr.name }})}
-                        onChange={handleChange}
-                        className="w-full border rounded p-2"
-                    >
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                    </select>
-                    {% elif attr.max_length and attr.max_length > 100 %}
-                    <textarea
-                        name="{{ attr.name }}"
-                        value={formData.{{ attr.name }}}
-                        onChange={handleChange}
-                        className="w-full border rounded p-2"
-                        rows={3}
-                        {% if attr.required %}required{% endif %}
-                    />
-                    {% else %}
-                    <input
-                        type="{% if attr.type.value == 'integer' or attr.type.value == 'float' %}number{% elif attr.type.value == 'datetime' %}datetime-local{% else %}text{% endif %}"
-                        name="{{ attr.name }}"
-                        value={formData.{{ attr.name }}}
-                        onChange={handleChange}
-                        className="w-full border rounded p-2"
-                        {% if attr.required %}required{% endif %}
-                    />
-                    {% endif %}
-                </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                                {{ attr.name | replace('_', ' ') | title }}
+                                {% if attr.required %}<span className="text-red-500 ml-0.5">*</span>{% endif %}
+                                {% if attr.unique %}<span className="text-xs font-normal text-amber-600 ml-1">(unique)</span>{% endif %}
+                            </label>
+{% if attr.type.value == 'boolean' %}
+                            <select
+                                name="{{ attr.name }}"
+                                value={String(formData.{{ attr.name }})}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white transition"
+                            >
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+{% elif attr.max_length and attr.max_length > 100 %}
+                            <textarea
+                                name="{{ attr.name }}"
+                                value={formData.{{ attr.name }}}
+                                onChange={handleChange}
+                                rows={3}
+                                placeholder="Enter {{ attr.name | replace('_', ' ') | lower }}..."
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition placeholder-slate-400"
+                                {% if attr.required %}required{% endif %}
+                            />
+{% elif attr.type.value == 'datetime' %}
+                            <input
+                                type="datetime-local"
+                                name="{{ attr.name }}"
+                                value={formData.{{ attr.name }}}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                                {% if attr.required %}required{% endif %}
+                            />
+{% else %}
+                            <input
+                                type="{% if attr.type.value == 'integer' or attr.type.value == 'float' %}number{% elif attr.name == 'email' %}email{% else %}text{% endif %}"
+                                name="{{ attr.name }}"
+                                value={formData.{{ attr.name }}}
+                                onChange={handleChange}
+                                placeholder="Enter {{ attr.name | replace('_', ' ') | lower }}..."
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition placeholder-slate-400"
+{% if attr.required %}                                required{% endif %}{% if attr.max_length %}
+                                maxLength={ {{ attr.max_length }} }{% endif %}
+                            />
+{% endif %}
+{% if attr.max_length and attr.max_length <= 100 %}
+                            <p className="text-xs text-slate-400 mt-1">Max {{ attr.max_length }} characters</p>
+{% endif %}
+                        </div>
 {% endif %}
 {% endfor %}
+                    </div>
 
-                <div className="flex gap-3">
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
-                    >
-                        {saving ? 'Saving...' : 'Save'}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => navigate('/{{ entity.table_name }}')}
-                        className="bg-gray-300 px-6 py-2 rounded hover:bg-gray-400"
-                    >
-                        Cancel
-                    </button>
+                    {/* Actions */}
+                    <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center gap-3">
+                        <button
+                            type="submit"
+                            disabled={saving}
+                            className="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
+                        >
+                            {saving ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    {isEdit ? 'Save Changes' : 'Create {{ entity.name | to_title }}'}
+                                </>
+                            )}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => navigate('/{{ entity.table_name }}')}
+                            className="px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-200 transition"
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>

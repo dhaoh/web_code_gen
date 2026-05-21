@@ -5,6 +5,8 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from src.evaluator import iter_code_files
+
 
 @dataclass
 class CompilabilityScore:
@@ -31,7 +33,7 @@ def evaluate_compilability(code_dir: str | Path) -> CompilabilityScore:
     backend_dir = code_dir / "backend" if (code_dir / "backend").is_dir() else code_dir
 
     # Check Python syntax for all .py files
-    py_files = list(code_dir.rglob("*.py"))
+    py_files = list(iter_code_files(code_dir, "*.py"))
     if py_files:
         all_syntax_ok = True
         for f in py_files:
@@ -80,7 +82,7 @@ def evaluate_compilability(code_dir: str | Path) -> CompilabilityScore:
 
     # Check frontend
     package_json = _find_file(code_dir, "package.json")
-    has_tsx = bool(list(code_dir.rglob("*.tsx"))) or bool(list(code_dir.rglob("*.jsx")))
+    has_tsx = bool(list(iter_code_files(code_dir, "*.tsx"))) or bool(list(iter_code_files(code_dir, "*.jsx")))
     score.has_frontend = package_json is not None or has_tsx
 
     if package_json:
@@ -113,5 +115,5 @@ def evaluate_compilability(code_dir: str | Path) -> CompilabilityScore:
 
 def _find_file(code_dir: Path, filename: str) -> Path | None:
     """Search for a file recursively, return first match."""
-    matches = list(code_dir.rglob(filename))
+    matches = list(iter_code_files(code_dir, filename))
     return matches[0] if matches else None

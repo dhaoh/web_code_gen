@@ -4,6 +4,8 @@ import difflib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from src.evaluator import iter_code_files
+
 
 @dataclass
 class ConsistencyScore:
@@ -45,7 +47,6 @@ def evaluate_consistency(run_dirs: list[str | Path]) -> ConsistencyScore:
                 contents.append("")
 
         if len(contents) >= 2:
-            # Average pairwise similarity
             similarities = []
             for i in range(len(contents)):
                 for j in range(i + 1, len(contents)):
@@ -62,9 +63,9 @@ def evaluate_consistency(run_dirs: list[str | Path]) -> ConsistencyScore:
 
 
 def _list_code_files(directory: Path) -> list[str]:
-    """List all code files relative to directory."""
+    """List all code files relative to directory, excluding build/install dirs."""
     files = []
     for ext in ["*.py", "*.tsx", "*.ts", "*.sql"]:
-        for f in sorted(directory.rglob(ext), key=lambda p: str(p)):
+        for f in sorted(iter_code_files(directory, ext), key=lambda p: str(p)):
             files.append(str(f.relative_to(directory)))
     return sorted(files)
