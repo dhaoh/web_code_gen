@@ -22,7 +22,7 @@ class {{ entity.name }}(Base):
 
 {% for attr in entity.attributes %}
     {{ attr.name }} = Column(
-        {{ attr.type | sql_type }},
+        {{ attr.type | sa_type }},
 {% if attr.primary_key %}
         primary_key=True,
         autoincrement=True,
@@ -37,7 +37,7 @@ class {{ entity.name }}(Base):
         nullable=True,
 {% endif %}
 {% if attr.default is not none and attr.default != "CURRENT_TIMESTAMP" %}
-        default={{ attr.default }},
+        default={{ py_default(attr.type.value, attr.default) }},
 {% endif %}
 {% if attr.default == "CURRENT_TIMESTAMP" %}
         default=datetime.utcnow,

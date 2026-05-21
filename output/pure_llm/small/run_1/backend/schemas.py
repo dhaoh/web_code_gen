@@ -1,69 +1,49 @@
-from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, List
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
 from datetime import datetime
 
-# Student Schemas
+# Student schemas
 class StudentBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
-    email: str = Field(..., min_length=5, max_length=100)
+    name: str = Field(..., min_length=1)
+    email: EmailStr
 
 class StudentCreate(StudentBase):
     pass
 
-class StudentUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    email: Optional[str] = Field(None, min_length=5, max_length=100)
+class StudentUpdate(StudentBase):
+    pass
 
 class StudentResponse(StudentBase):
     id: int
-    
     class Config:
-        from_attributes = True
+        orm_mode = True
 
-# Course Schemas
+# Course schemas
 class CourseBase(BaseModel):
-    title: str = Field(..., min_length=1, max_length=200)
-    description: Optional[str] = Field(None, max_length=1000)
-    capacity: int = Field(..., gt=0, le=1000)
+    title: str = Field(..., min_length=1)
+    description: Optional[str] = None
+    capacity: int = Field(..., gt=0)
 
 class CourseCreate(CourseBase):
     pass
 
-class CourseUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=200)
-    description: Optional[str] = Field(None, max_length=1000)
-    capacity: Optional[int] = Field(None, gt=0, le=1000)
+class CourseUpdate(CourseBase):
+    pass
 
 class CourseResponse(CourseBase):
     id: int
-    enrolled_count: int = 0
-    
     class Config:
-        from_attributes = True
+        orm_mode = True
 
-# Enrollment Schemas
+# Enrollment schemas
 class EnrollmentCreate(BaseModel):
-    student_id: int = Field(..., gt=0)
-    course_id: int = Field(..., gt=0)
+    student_id: int
+    course_id: int
 
 class EnrollmentResponse(BaseModel):
     id: int
     student_id: int
     course_id: int
     enrolled_at: datetime
-    student_name: str = ""
-    course_title: str = ""
-    
     class Config:
-        from_attributes = True
-
-class EnrollmentListResponse(BaseModel):
-    id: int
-    student_id: int
-    course_id: int
-    enrolled_at: datetime
-    student_name: str
-    course_title: str
-    
-    class Config:
-        from_attributes = True
+        orm_mode = True

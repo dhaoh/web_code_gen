@@ -10,7 +10,7 @@ from routes import routers
 
 app = FastAPI(
     title="Student Course System Small",
-    description="A simple student course selection system. Students can browse available courses and enroll. The system tracks enrollments and prevents over-capacity enrollment.",
+    description="A simple student course selection system. Students can browse available courses and enroll. The system tracks enrollments and prevents over-capacity enrollment. ",
     version="1.0.0",
 )
 

@@ -21,6 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.parser.parser import parse_model
+from src.generator import generate_run_script
 from src.generator.sql_generator import generate_sql
 from src.generator.api_generator import generate_api
 from src.generator.ui_generator import generate_ui
@@ -62,6 +63,7 @@ def run_single_experiment(
             generate_sql(model, backend_dir)
             generate_api(model, backend_dir)
             generate_ui(model, frontend_dir)
+            generate_run_script(model, run_dir)
 
             # Step 2: LLM fills business logic
             fill_skeleton(model, backend_dir)

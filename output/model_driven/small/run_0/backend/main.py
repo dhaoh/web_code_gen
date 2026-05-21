@@ -2,26 +2,15 @@
 FastAPI application entry point for student_course_system_small.
 Generated from model definition.
 """
-import sys
-import subprocess
-
-# Install missing dependencies
-try:
-    import fastapi
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "fastapi", "uvicorn"])
-    from fastapi import FastAPI
-else:
-    from fastapi import FastAPI
-
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .models import init_db
-from .routes import routers
+from models import init_db
+from routes import routers
 
 app = FastAPI(
     title="Student Course System Small",
-    description="A simple student course selection system. Students can browse available courses and enroll. The system tracks enrollments and prevents over-capacity enrollment.",
+    description="A simple student course selection system. Students can browse available courses and enroll. The system tracks enrollments and prevents over-capacity enrollment. ",
     version="1.0.0",
 )
 

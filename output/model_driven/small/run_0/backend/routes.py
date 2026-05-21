@@ -6,13 +6,13 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from .models import (
+from models import (
     Student,
     Course,
     Enrollment,
     get_session,
 )
-from .schemas import (
+from schemas import (
     StudentCreate,
     StudentUpdate,
     StudentResponse,
@@ -46,9 +46,6 @@ def get_student(item_id: int, session: Session = Depends(get_session)):
 @router_1.post("/", response_model=StudentResponse, status_code=status.HTTP_201_CREATED)
 def create_student(data: StudentCreate, session: Session = Depends(get_session)):
     """Create a new Student."""
-    existing = session.query(Student).filter(Student.email == data.email).first()
-    if existing:
-        raise HTTPException(status_code=409, detail="Student with this email already exists")
     item = Student(**data.model_dump())
     session.add(item)
     session.commit()
@@ -62,10 +59,6 @@ def update_student(item_id: int, data: StudentUpdate, session: Session = Depends
     item = session.query(Student).filter(Student.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Student not found")
-    if data.email is not None:
-        existing = session.query(Student).filter(Student.email == data.email, Student.id != item_id).first()
-        if existing:
-            raise HTTPException(status_code=409, detail="Email already in use by another student")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
     session.commit()
@@ -79,9 +72,6 @@ def delete_student(item_id: int, session: Session = Depends(get_session)):
     item = session.query(Student).filter(Student.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Student not found")
-    enrollments = session.query(Enrollment).filter(Enrollment.student_id == item_id).all()
-    if enrollments:
-        raise HTTPException(status_code=400, detail="Cannot delete student with active enrollments")
     session.delete(item)
     session.commit()
 
@@ -108,8 +98,6 @@ def get_course(item_id: int, session: Session = Depends(get_session)):
 @router_2.post("/", response_model=CourseResponse, status_code=status.HTTP_201_CREATED)
 def create_course(data: CourseCreate, session: Session = Depends(get_session)):
     """Create a new Course."""
-    if data.capacity < 1:
-        raise HTTPException(status_code=422, detail="Course capacity must be at least 1")
     item = Course(**data.model_dump())
     session.add(item)
     session.commit()
@@ -123,12 +111,6 @@ def update_course(item_id: int, data: CourseUpdate, session: Session = Depends(g
     item = session.query(Course).filter(Course.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Course not found")
-    if data.capacity is not None and data.capacity < 1:
-        raise HTTPException(status_code=422, detail="Course capacity must be at least 1")
-    if data.capacity is not None:
-        current_enrollments = session.query(Enrollment).filter(Enrollment.course_id == item_id).count()
-        if data.capacity < current_enrollments:
-            raise HTTPException(status_code=400, detail="Cannot reduce capacity below current enrollment count")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
     session.commit()
@@ -142,9 +124,6 @@ def delete_course(item_id: int, session: Session = Depends(get_session)):
     item = session.query(Course).filter(Course.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Course not found")
-    enrollments = session.query(Enrollment).filter(Enrollment.course_id == item_id).all()
-    if enrollments:
-        raise HTTPException(status_code=400, detail="Cannot delete course with active enrollments")
     session.delete(item)
     session.commit()
 
@@ -171,21 +150,37 @@ def get_enrollment(item_id: int, session: Session = Depends(get_session)):
 @router_3.post("/", response_model=EnrollmentResponse, status_code=status.HTTP_201_CREATED)
 def create_enrollment(data: EnrollmentCreate, session: Session = Depends(get_session)):
     """Create a new Enrollment."""
+    # Validate student existence
     student = session.query(Student).filter(Student.id == data.student_id).first()
     if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
+
+    # Validate course existence
     course = session.query(Course).filter(Course.id == data.course_id).first()
     if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
-    existing_enrollment = session.query(Enrollment).filter(
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+
+    # Business rule: duplicate enrollment check
+    existing = session.query(Enrollment).filter(
         Enrollment.student_id == data.student_id,
         Enrollment.course_id == data.course_id
     ).first()
-    if existing_enrollment:
-        raise HTTPException(status_code=409, detail="Student is already enrolled in this course")
-    current_count = session.query(Enrollment).filter(Enrollment.course_id == data.course_id).count()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Student already enrolled in this course"
+        )
+
+    # Business rule: capacity check
+    current_count = session.query(Enrollment).filter(
+        Enrollment.course_id == data.course_id
+    ).count()
     if current_count >= course.capacity:
-        raise HTTPException(status_code=400, detail="Course has reached maximum capacity")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Course has reached its maximum capacity"
+        )
+
     item = Enrollment(**data.model_dump())
     session.add(item)
     session.commit()
@@ -199,32 +194,6 @@ def update_enrollment(item_id: int, data: EnrollmentUpdate, session: Session = D
     item = session.query(Enrollment).filter(Enrollment.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Enrollment not found")
-    if data.student_id is not None or data.course_id is not None:
-        new_student_id = data.student_id if data.student_id is not None else item.student_id
-        new_course_id = data.course_id if data.course_id is not None else item.course_id
-        if data.student_id is not None:
-            student = session.query(Student).filter(Student.id == data.student_id).first()
-            if not student:
-                raise HTTPException(status_code=404, detail="Student not found")
-        if data.course_id is not None:
-            course = session.query(Course).filter(Course.id == data.course_id).first()
-            if not course:
-                raise HTTPException(status_code=404, detail="Course not found")
-        existing_enrollment = session.query(Enrollment).filter(
-            Enrollment.student_id == new_student_id,
-            Enrollment.course_id == new_course_id,
-            Enrollment.id != item_id
-        ).first()
-        if existing_enrollment:
-            raise HTTPException(status_code=409, detail="This enrollment already exists")
-        if data.course_id is not None or (data.course_id is None and item.course_id != new_course_id):
-            course_obj = session.query(Course).filter(Course.id == new_course_id).first()
-            current_count = session.query(Enrollment).filter(
-                Enrollment.course_id == new_course_id,
-                Enrollment.id != item_id
-            ).count()
-            if current_count >= course_obj.capacity:
-                raise HTTPException(status_code=400, detail="Course has reached maximum capacity")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
     session.commit()

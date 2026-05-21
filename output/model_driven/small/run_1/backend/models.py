@@ -7,7 +7,7 @@ from typing import Optional
 
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime,
-    ForeignKey, create_engine, UniqueConstraint, TEXT, INTEGER
+    ForeignKey, create_engine, UniqueConstraint
 )
 from sqlalchemy.orm import DeclarativeBase, relationship, Session
 
@@ -20,16 +20,16 @@ class Student(Base):
     __tablename__ = "students"
 
     id = Column(
-        INTEGER,
+        Integer,
         primary_key=True,
         autoincrement=True,
     )
     name = Column(
-        TEXT,
+        String,
         nullable=False,
     )
     email = Column(
-        TEXT,
+        String,
         unique=True,
         nullable=False,
     )
@@ -39,20 +39,20 @@ class Course(Base):
     __tablename__ = "courses"
 
     id = Column(
-        INTEGER,
+        Integer,
         primary_key=True,
         autoincrement=True,
     )
     title = Column(
-        TEXT,
+        String,
         nullable=False,
     )
     description = Column(
-        TEXT,
+        String,
         nullable=True,
     )
     capacity = Column(
-        INTEGER,
+        Integer,
         nullable=False,
         default=30,
     )
@@ -62,20 +62,20 @@ class Enrollment(Base):
     __tablename__ = "enrollments"
 
     id = Column(
-        INTEGER,
+        Integer,
         primary_key=True,
         autoincrement=True,
     )
     student_id = Column(
-        INTEGER,
+        Integer,
         nullable=False,
     )
     course_id = Column(
-        INTEGER,
+        Integer,
         nullable=False,
     )
     enrolled_at = Column(
-        TEXT,
+        DateTime,
         nullable=False,
         default=datetime.utcnow,
     )

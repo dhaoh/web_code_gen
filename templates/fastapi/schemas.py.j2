@@ -7,41 +7,41 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-{% for entity in model.entities %}
+{% for entity in model.entities +%}
 # --- {{ entity.name }} ---
 
 class {{ entity.name }}Base(BaseModel):
-{% for attr in entity.attributes %}
-{% if not attr.primary_key %}
+{% for attr in entity.attributes +%}
+{% if not attr.primary_key +%}
     {{ attr.name }}: {{ attr.type | py_type }}{% if attr.nullable or not attr.required %} | None = None{% endif %}
-{% endif %}
-{% endfor %}
+{% endif +%}
+{% endfor +%}
 
 
 class {{ entity.name }}Create({{ entity.name }}Base):
-{% for attr in entity.attributes if attr.required and not attr.primary_key %}
+{% for attr in entity.attributes if attr.required and not attr.primary_key +%}
     {{ attr.name }}: {{ attr.type | py_type }}
-{% endfor %}
+{% endfor +%}
     pass
 
 
 class {{ entity.name }}Update(BaseModel):
-{% for attr in entity.attributes %}
-{% if not attr.primary_key %}
-    {{ attr.name }}: {{ attr.type | py_type }}{% if attr.nullable or not attr.required %} | None = None{% endif %}{% if attr.default is not none %} = {{ attr.default }}{% endif %}
-{% endif %}
-{% endfor %}
+{% for attr in entity.attributes +%}
+{% if not attr.primary_key +%}
+    {{ attr.name }}: {{ attr.type | py_type }}{% if attr.nullable or not attr.required %} | None = None{% endif %}{% if attr.default is not none and attr.default != "CURRENT_TIMESTAMP" %} = {{ py_default(attr.type.value, attr.default) }}{% endif %}
+{% endif +%}
+{% endfor +%}
 
 
 class {{ entity.name }}Response({{ entity.name }}Base):
-{% for attr in entity.attributes %}
-{% if attr.primary_key %}
+{% for attr in entity.attributes +%}
+{% if attr.primary_key +%}
     {{ attr.name }}: {{ attr.type | py_type }}
-{% endif %}
-{% endfor %}
+{% endif +%}
+{% endfor +%}
 
     class Config:
         from_attributes = True
 
 
-{% endfor %}
+{% endfor +%}

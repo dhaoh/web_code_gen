@@ -1,295 +1,195 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from typing import List
-from datetime import datetime
-
-from . import models, schemas
-from .database import get_db
+from models import SessionLocal, Student, Course, Enrollment
+from schemas import StudentCreate, StudentResponse, CourseCreate, CourseResponse, EnrollmentCreate, EnrollmentResponse
+from typing import List, Optional
 
 router = APIRouter()
 
-# Student Routes
-@router.post("/students/", response_model=schemas.StudentResponse, status_code=status.HTTP_201_CREATED)
-def create_student(student: schemas.StudentCreate, db: Session = Depends(get_db)):
-    # Check if email already exists
-    existing_student = db.query(models.Student).filter(models.Student.email == student.email).first()
-    if existing_student:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Student with email {student.email} already exists"
-        )
-    
-    db_student = models.Student(name=student.name, email=student.email)
-    db.add(db_student)
-    db.commit()
-    db.refresh(db_student)
-    return db_student
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-@router.get("/students/", response_model=List[schemas.StudentResponse])
-def get_students(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    students = db.query(models.Student).offset(skip).limit(limit).all()
+# --- Student CRUD ---
+@router.post("/students/", response_model=StudentResponse, status_code=201)
+def create_student(student: StudentCreate, db: Session = Depends(get_db)):
+    # check duplicate email
+    db_student = db.query(Student).filter(Student.email == student.email).first()
+    if db_student:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    new_student = Student(name=student.name, email=student.email)
+    db.add(new_student)
+    db.commit()
+    db.refresh(new_student)
+    return new_student
+
+@router.get("/students/", response_model=List[StudentResponse])
+def list_students(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    students = db.query(Student).offset(skip).limit(limit).all()
     return students
 
-@router.get("/students/{student_id}", response_model=schemas.StudentResponse)
+@router.get("/students/{student_id}", response_model=StudentResponse)
 def get_student(student_id: int, db: Session = Depends(get_db)):
-    student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Student with id {student_id} not found"
-        )
+        raise HTTPException(status_code=404, detail="Student not found")
     return student
 
-@router.put("/students/{student_id}", response_model=schemas.StudentResponse)
-def update_student(student_id: int, student_update: schemas.StudentUpdate, db: Session = Depends(get_db)):
-    db_student = db.query(models.Student).filter(models.Student.id == student_id).first()
-    if not db_student:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Student with id {student_id} not found"
-        )
-    
-    # Check email uniqueness if updating email
-    if student_update.email and student_update.email != db_student.email:
-        existing = db.query(models.Student).filter(models.Student.email == student_update.email).first()
-        if existing:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Student with email {student_update.email} already exists"
-            )
-    
-    if student_update.name is not None:
-        db_student.name = student_update.name
-    if student_update.email is not None:
-        db_student.email = student_update.email
-    
+@router.put("/students/{student_id}", response_model=StudentResponse)
+def update_student(student_id: int, student_data: StudentCreate, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    # check email uniqueness if changed
+    existing = db.query(Student).filter(Student.email == student_data.email, Student.id != student_id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already in use")
+    student.name = student_data.name
+    student.email = student_data.email
     db.commit()
-    db.refresh(db_student)
-    return db_student
+    db.refresh(student)
+    return student
 
-@router.delete("/students/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/students/{student_id}", status_code=204)
 def delete_student(student_id: int, db: Session = Depends(get_db)):
-    db_student = db.query(models.Student).filter(models.Student.id == student_id).first()
-    if not db_student:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Student with id {student_id} not found"
-        )
-    
-    # Delete all enrollments for this student
-    db.query(models.Enrollment).filter(models.Enrollment.student_id == student_id).delete()
-    db.delete(db_student)
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    db.delete(student)
     db.commit()
     return None
 
-# Course Routes
-@router.post("/courses/", response_model=schemas.CourseResponse, status_code=status.HTTP_201_CREATED)
-def create_course(course: schemas.CourseCreate, db: Session = Depends(get_db)):
-    db_course = models.Course(
-        title=course.title,
-        description=course.description,
-        capacity=course.capacity
-    )
-    db.add(db_course)
+# --- Course CRUD ---
+@router.post("/courses/", response_model=CourseResponse, status_code=201)
+def create_course(course: CourseCreate, db: Session = Depends(get_db)):
+    new_course = Course(title=course.title, description=course.description, capacity=course.capacity)
+    db.add(new_course)
     db.commit()
-    db.refresh(db_course)
-    
-    # Calculate enrolled count
-    enrolled_count = db.query(models.Enrollment).filter(
-        models.Enrollment.course_id == db_course.id
-    ).count()
-    db_course.enrolled_count = enrolled_count
-    
-    return db_course
+    db.refresh(new_course)
+    return course_response(new_course, db)
 
-@router.get("/courses/", response_model=List[schemas.CourseResponse])
-def get_courses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    courses = db.query(models.Course).offset(skip).limit(limit).all()
-    
-    # Add enrolled_count to each course
-    for course in courses:
-        course.enrolled_count = db.query(models.Enrollment).filter(
-            models.Enrollment.course_id == course.id
-        ).count()
-    
-    return courses
+@router.get("/courses/", response_model=List[CourseResponse])
+def list_courses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    courses = db.query(Course).offset(skip).limit(limit).all()
+    return [course_response(c, db) for c in courses]
 
-@router.get("/courses/{course_id}", response_model=schemas.CourseResponse)
+@router.get("/courses/{course_id}", response_model=CourseResponse)
 def get_course(course_id: int, db: Session = Depends(get_db)):
-    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    course = db.query(Course).filter(Course.id == course_id).first()
     if not course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Course with id {course_id} not found"
-        )
-    
-    course.enrolled_count = db.query(models.Enrollment).filter(
-        models.Enrollment.course_id == course.id
-    ).count()
-    
-    return course
+        raise HTTPException(status_code=404, detail="Course not found")
+    return course_response(course, db)
 
-@router.put("/courses/{course_id}", response_model=schemas.CourseResponse)
-def update_course(course_id: int, course_update: schemas.CourseUpdate, db: Session = Depends(get_db)):
-    db_course = db.query(models.Course).filter(models.Course.id == course_id).first()
-    if not db_course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Course with id {course_id} not found"
-        )
-    
-    if course_update.title is not None:
-        db_course.title = course_update.title
-    if course_update.description is not None:
-        db_course.description = course_update.description
-    if course_update.capacity is not None:
-        # Check if new capacity is less than current enrollments
-        current_enrolled = db.query(models.Enrollment).filter(
-            models.Enrollment.course_id == course_id
-        ).count()
-        if course_update.capacity < current_enrolled:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot reduce capacity below current enrollment count ({current_enrolled})"
-            )
-        db_course.capacity = course_update.capacity
-    
+@router.put("/courses/{course_id}", response_model=CourseResponse)
+def update_course(course_id: int, course_data: CourseCreate, db: Session = Depends(get_db)):
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    course.title = course_data.title
+    course.description = course_data.description
+    course.capacity = course_data.capacity
     db.commit()
-    db.refresh(db_course)
-    
-    db_course.enrolled_count = db.query(models.Enrollment).filter(
-        models.Enrollment.course_id == db_course.id
-    ).count()
-    
-    return db_course
+    db.refresh(course)
+    return course_response(course, db)
 
-@router.delete("/courses/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/courses/{course_id}", status_code=204)
 def delete_course(course_id: int, db: Session = Depends(get_db)):
-    db_course = db.query(models.Course).filter(models.Course.id == course_id).first()
-    if not db_course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Course with id {course_id} not found"
-        )
-    
-    # Delete all enrollments for this course
-    db.query(models.Enrollment).filter(models.Enrollment.course_id == course_id).delete()
-    db.delete(db_course)
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    db.delete(course)
     db.commit()
     return None
 
-# Enrollment Routes
-@router.post("/enrollments/", response_model=schemas.EnrollmentResponse, status_code=status.HTTP_201_CREATED)
-def create_enrollment(enrollment: schemas.EnrollmentCreate, db: Session = Depends(get_db)):
-    # Check if student exists
-    student = db.query(models.Student).filter(models.Student.id == enrollment.student_id).first()
+# --- Enrollment operations ---
+@router.post("/enrollments/", response_model=EnrollmentResponse, status_code=201)
+def create_enrollment(enrollment: EnrollmentCreate, db: Session = Depends(get_db)):
+    # Check student exists
+    student = db.query(Student).filter(Student.id == enrollment.student_id).first()
     if not student:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Student with id {enrollment.student_id} not found"
-        )
-    
-    # Check if course exists
-    course = db.query(models.Course).filter(models.Course.id == enrollment.course_id).first()
+        raise HTTPException(status_code=404, detail="Student not found")
+    # Check course exists
+    course = db.query(Course).filter(Course.id == enrollment.course_id).first()
     if not course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Course with id {enrollment.course_id} not found"
-        )
-    
-    # Business Rule: duplicate_enrollment - Check for existing enrollment
-    existing_enrollment = db.query(models.Enrollment).filter(
-        models.Enrollment.student_id == enrollment.student_id,
-        models.Enrollment.course_id == enrollment.course_id
+        raise HTTPException(status_code=404, detail="Course not found")
+    # Business rule: capacity check
+    current_count = db.query(Enrollment).filter(Enrollment.course_id == enrollment.course_id).count()
+    if current_count >= course.capacity:
+        raise HTTPException(status_code=400, detail="Course is at full capacity")
+    # Business rule: duplicate enrollment check (plus DB unique constraint)
+    existing = db.query(Enrollment).filter(
+        Enrollment.student_id == enrollment.student_id,
+        Enrollment.course_id == enrollment.course_id
     ).first()
-    
-    if existing_enrollment:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Student is already enrolled in this course"
-        )
-    
-    # Business Rule: capacity_check - Check course capacity
-    current_enrolled = db.query(models.Enrollment).filter(
-        models.Enrollment.course_id == enrollment.course_id
-    ).count()
-    
-    if current_enrolled >= course.capacity:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Course has reached maximum capacity ({course.capacity})"
-        )
-    
-    # Create enrollment
-    db_enrollment = models.Enrollment(
-        student_id=enrollment.student_id,
-        course_id=enrollment.course_id,
-        enrolled_at=datetime.utcnow()
-    )
-    db.add(db_enrollment)
+    if existing:
+        raise HTTPException(status_code=400, detail="Student already enrolled in this course")
+    new_enrollment = Enrollment(student_id=enrollment.student_id, course_id=enrollment.course_id)
+    db.add(new_enrollment)
     db.commit()
-    db.refresh(db_enrollment)
-    
-    # Load relationships
-    db_enrollment.student = student
-    db_enrollment.course = course
-    
-    return db_enrollment
+    db.refresh(new_enrollment)
+    # Load relationships for response
+    return enrollment_response(new_enrollment, db)
 
-@router.get("/enrollments/", response_model=List[schemas.EnrollmentResponse])
-def get_enrollments(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    enrollments = db.query(models.Enrollment).offset(skip).limit(limit).all()
-    return enrollments
+@router.get("/enrollments/", response_model=List[EnrollmentResponse])
+def list_enrollments(
+    student_id: Optional[int] = None,
+    course_id: Optional[int] = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    query = db.query(Enrollment)
+    if student_id is not None:
+        query = query.filter(Enrollment.student_id == student_id)
+    if course_id is not None:
+        query = query.filter(Enrollment.course_id == course_id)
+    enrollments = query.offset(skip).limit(limit).all()
+    return [enrollment_response(e, db) for e in enrollments]
 
-@router.get("/enrollments/{enrollment_id}", response_model=schemas.EnrollmentResponse)
-def get_enrollment(enrollment_id: int, db: Session = Depends(get_db)):
-    enrollment = db.query(models.Enrollment).filter(models.Enrollment.id == enrollment_id).first()
-    if not enrollment:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Enrollment with id {enrollment_id} not found"
-        )
-    return enrollment
-
-@router.delete("/enrollments/{enrollment_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/enrollments/{enrollment_id}", status_code=204)
 def delete_enrollment(enrollment_id: int, db: Session = Depends(get_db)):
-    db_enrollment = db.query(models.Enrollment).filter(models.Enrollment.id == enrollment_id).first()
-    if not db_enrollment:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Enrollment with id {enrollment_id} not found"
-        )
-    
-    db.delete(db_enrollment)
+    enrollment = db.query(Enrollment).filter(Enrollment.id == enrollment_id).first()
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+    db.delete(enrollment)
     db.commit()
     return None
 
-# Additional endpoints for getting enrollments by student or course
-@router.get("/students/{student_id}/enrollments/", response_model=List[schemas.EnrollmentResponse])
-def get_student_enrollments(student_id: int, db: Session = Depends(get_db)):
-    student = db.query(models.Student).filter(models.Student.id == student_id).first()
-    if not student:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Student with id {student_id} not found"
-        )
-    
-    enrollments = db.query(models.Enrollment).filter(
-        models.Enrollment.student_id == student_id
-    ).all()
-    return enrollments
+# Helper functions to build response with computed fields
+def course_response(course: Course, db: Session) -> dict:
+    count = db.query(Enrollment).filter(Enrollment.course_id == course.id).count()
+    return {
+        "id": course.id,
+        "title": course.title,
+        "description": course.description,
+        "capacity": course.capacity,
+        "current_enrollment": count
+    }
 
-@router.get("/courses/{course_id}/enrollments/", response_model=List[schemas.EnrollmentResponse])
-def get_course_enrollments(course_id: int, db: Session = Depends(get_db)):
-    course = db.query(models.Course).filter(models.Course.id == course_id).first()
-    if not course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Course with id {course_id} not found"
-        )
-    
-    enrollments = db.query(models.Enrollment).filter(
-        models.Enrollment.course_id == course_id
-    ).all()
-    return enrollments
+def enrollment_response(enrollment: Enrollment, db: Session) -> dict:
+    # eager load relationships
+    student = db.query(Student).filter(Student.id == enrollment.student_id).first()
+    course = db.query(Course).filter(Course.id == enrollment.course_id).first()
+    count = db.query(Enrollment).filter(Enrollment.course_id == course.id).count()
+    return {
+        "id": enrollment.id,
+        "student_id": enrollment.student_id,
+        "course_id": enrollment.course_id,
+        "enrolled_at": enrollment.enrolled_at,
+        "student": {
+            "id": student.id,
+            "name": student.name,
+            "email": student.email,
+        },
+        "course": {
+            "id": course.id,
+            "title": course.title,
+            "description": course.description,
+            "capacity": course.capacity,
+            "current_enrollment": count,
+        }
+    }

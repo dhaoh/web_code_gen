@@ -13,6 +13,7 @@ _engine = Environment(
     autoescape=select_autoescape(),
     trim_blocks=True,
     lstrip_blocks=True,
+    keep_trailing_newline=True,
 )
 
 # Type mapping filters
@@ -75,13 +76,41 @@ def plural(name: str) -> str:
     return name + "s"
 
 
+# SQLAlchemy type mapping (for FastAPI model templates)
+_SA_TYPE = {
+    "integer": "Integer",
+    "string": "String",
+    "float": "Float",
+    "boolean": "Boolean",
+    "datetime": "DateTime",
+}
+
+
+def sa_type(attr_type: str) -> str:
+    return _SA_TYPE.get(attr_type, "String")
+
+
+def py_default(attr_type: str, value: object) -> str:
+    if value is None:
+        return "None"
+    if attr_type in ("string", "datetime"):
+        return f'"{value}"'
+    if attr_type == "boolean":
+        return "True" if value in (True, "true", "True") else "False"
+    return str(value)
+
+
 _engine.filters["sql_type"] = sql_type
+_engine.filters["sa_type"] = sa_type
 _engine.filters["py_type"] = py_type
 _engine.filters["ts_type"] = ts_type
 _engine.filters["to_camel"] = to_camel
 _engine.filters["to_pascal"] = to_pascal
 _engine.filters["to_title"] = to_title
 _engine.filters["plural"] = plural
+
+# Global functions (callable as {{ func() }} in templates)
+_engine.globals["py_default"] = py_default
 
 
 def render_template(template_path: str, **kwargs) -> str:

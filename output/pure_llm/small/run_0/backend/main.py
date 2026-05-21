@@ -1,25 +1,32 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .database import init_db
-from .routes import router
+import uvicorn
+from models import Base, engine
+from routes import router as api_router
 
-app = FastAPI(title="Student Course Selection System")
+app = FastAPI(title="Student Course Enrollment System")
 
-# Configure CORS
+# CORS
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",  # Vite default
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize database
-init_db()
+# Create tables
+Base.metadata.create_all(bind=engine)
 
-# Include routes
-app.include_router(router)
+app.include_router(api_router, prefix="/api")
 
 @app.get("/")
 def root():
-    return {"message": "Student Course Selection System API"}
+    return {"message": "Student Course Enrollment API"}
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import subprocess
-import tempfile
-from dataclasses import dataclass
+import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -12,11 +12,7 @@ class CompilabilityScore:
     python_import_pass: bool = False
     frontend_build_pass: bool = False
     has_frontend: bool = False
-    errors: list[str] = None
-
-    def __post_init__(self):
-        if self.errors is None:
-            self.errors = []
+    errors: list[str] = field(default_factory=list)
 
     @property
     def score(self) -> float:
@@ -31,14 +27,17 @@ def evaluate_compilability(code_dir: str | Path) -> CompilabilityScore:
     code_dir = Path(code_dir)
     score = CompilabilityScore()
 
+    # Find backend directory (model_driven uses "backend" subdir, pure_llm puts files in root)
+    backend_dir = code_dir / "backend" if (code_dir / "backend").is_dir() else code_dir
+
     # Check Python syntax for all .py files
-    py_files = list(code_dir.glob("**/*.py"))
+    py_files = list(code_dir.rglob("*.py"))
     if py_files:
         all_syntax_ok = True
         for f in py_files:
             try:
                 result = subprocess.run(
-                    ["python", "-m", "py_compile", str(f)],
+                    [sys.executable, "-m", "py_compile", str(f)],
                     capture_output=True,
                     text=True,
                     timeout=15,
@@ -54,49 +53,52 @@ def evaluate_compilability(code_dir: str | Path) -> CompilabilityScore:
         score.python_syntax_pass = False
         score.errors.append("No Python files found")
 
-    # Check if main.py can be imported
-    main_py = code_dir / "main.py"
-    if main_py.exists():
+    # Check if main.py exists and can be imported
+    main_py = _find_file(code_dir, "main.py")
+    if main_py:
+        main_dir = main_py.parent
         try:
             result = subprocess.run(
                 [
-                    "python",
+                    sys.executable,
                     "-c",
-                    f"import sys; sys.path.insert(0, '{code_dir}'); "
+                    f"import sys; sys.path.insert(0, '{main_dir}'); "
                     "from main import app; print('OK')",
                 ],
                 capture_output=True,
                 text=True,
                 timeout=30,
-                cwd=str(code_dir),
+                cwd=str(main_dir),
             )
             score.python_import_pass = result.returncode == 0
             if not score.python_import_pass:
                 score.errors.append(f"Import: {result.stderr.strip()[:300]}")
         except Exception as e:
             score.errors.append(f"Import exception: {e}")
+    else:
+        score.errors.append("No main.py found")
 
     # Check frontend
-    has_package_json = (code_dir / "package.json").exists()
-    has_tsx = bool(list(code_dir.glob("**/*.tsx"))) or bool(list(code_dir.glob("**/*.jsx")))
-    score.has_frontend = has_package_json or has_tsx
+    package_json = _find_file(code_dir, "package.json")
+    has_tsx = bool(list(code_dir.rglob("*.tsx"))) or bool(list(code_dir.rglob("*.jsx")))
+    score.has_frontend = package_json is not None or has_tsx
 
-    if has_package_json:
+    if package_json:
         try:
             result = subprocess.run(
                 ["npm", "install"],
                 capture_output=True,
                 text=True,
-                timeout=60,
-                cwd=str(code_dir),
+                timeout=120,
+                cwd=str(package_json.parent),
             )
             if result.returncode == 0:
                 result = subprocess.run(
                     ["npm", "run", "build"],
                     capture_output=True,
                     text=True,
-                    timeout=60,
-                    cwd=str(code_dir),
+                    timeout=120,
+                    cwd=str(package_json.parent),
                 )
                 score.frontend_build_pass = result.returncode == 0
                 if not score.frontend_build_pass:
@@ -107,3 +109,9 @@ def evaluate_compilability(code_dir: str | Path) -> CompilabilityScore:
             score.errors.append(f"Frontend exception: {e}")
 
     return score
+
+
+def _find_file(code_dir: Path, filename: str) -> Path | None:
+    """Search for a file recursively, return first match."""
+    matches = list(code_dir.rglob(filename))
+    return matches[0] if matches else None

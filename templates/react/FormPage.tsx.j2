@@ -1,6 +1,5 @@
-{% raw %}import React, { useState, useEffect } from 'react';
+import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-{% endraw %}
 
 interface {{ entity.name }}FormData {
 {% for attr in entity.attributes %}
@@ -52,7 +51,7 @@ export default function {{ entity.name }}FormPage() {
         }
     }, [id]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         let value: any = e.target.value;
 {% for attr in entity.attributes %}
 {% if attr.type.value in ('integer', 'float') %}
@@ -65,7 +64,7 @@ export default function {{ entity.name }}FormPage() {
         setFormData({ ...formData, [e.target.name]: value });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setSaving(true);
         setError(null);

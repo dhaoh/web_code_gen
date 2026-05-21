@@ -1,7 +1,8 @@
 {
-  "name": "student-course-system-frontend",
-  "version": "1.0.0",
+  "name": "student-course-system",
   "private": true,
+  "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

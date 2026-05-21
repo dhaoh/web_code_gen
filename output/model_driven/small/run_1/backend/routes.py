@@ -46,12 +46,10 @@ def get_student(item_id: int, session: Session = Depends(get_session)):
 @router_1.post("/", response_model=StudentResponse, status_code=status.HTTP_201_CREATED)
 def create_student(data: StudentCreate, session: Session = Depends(get_session)):
     """Create a new Student."""
-    # LLM_FILL: Check for existing Enrollment with same keys (duplicate check)
-    # LLM_FILL: Apply business rule: Prevent a student from enrolling in the same course more than once. The system must check for...
-    # LLM_FILL: Validate create_student logic
-    existing = session.query(Student).filter(Student.email == data.email).first()
-    if existing:
-        raise HTTPException(status_code=409, detail="Student with this email already exists")
+    # Check for duplicate email (unique constraint)
+    existing_student = session.query(Student).filter(Student.email == data.email).first()
+    if existing_student:
+        raise HTTPException(status_code=409, detail="A student with this email already exists.")
     item = Student(**data.model_dump())
     session.add(item)
     session.commit()
@@ -65,11 +63,11 @@ def update_student(item_id: int, data: StudentUpdate, session: Session = Depends
     item = session.query(Student).filter(Student.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Student not found")
-    # LLM_FILL: Validate update_student logic
+    # Validate update_student logic: ensure email remains unique if changed
     if data.email is not None:
         existing = session.query(Student).filter(Student.email == data.email, Student.id != item_id).first()
         if existing:
-            raise HTTPException(status_code=409, detail="Email already in use by another student")
+            raise HTTPException(status_code=409, detail="A student with this email already exists.")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
     session.commit()
@@ -83,10 +81,7 @@ def delete_student(item_id: int, session: Session = Depends(get_session)):
     item = session.query(Student).filter(Student.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Student not found")
-    # LLM_FILL: Validate delete_student logic (cascade checks)
-    enrollments = session.query(Enrollment).filter(Enrollment.student_id == item_id).all()
-    if enrollments:
-        raise HTTPException(status_code=400, detail="Cannot delete student with active enrollments")
+    # No additional cascade checks required
     session.delete(item)
     session.commit()
 
@@ -113,15 +108,7 @@ def get_course(item_id: int, session: Session = Depends(get_session)):
 @router_2.post("/", response_model=CourseResponse, status_code=status.HTTP_201_CREATED)
 def create_course(data: CourseCreate, session: Session = Depends(get_session)):
     """Create a new Course."""
-    # LLM_FILL: Check for existing Enrollment with same keys (duplicate check)
-    # LLM_FILL: Apply business rule: Prevent enrollment when the course has reached its maximum capacity. The system must count...
-    # LLM_FILL: Apply business rule: Prevent a student from enrolling in the same course more than once. The system must check for...
-    # LLM_FILL: Validate create_course logic
-    existing = session.query(Course).filter(Course.title == data.title).first()
-    if existing:
-        raise HTTPException(status_code=409, detail="Course with this title already exists")
-    if data.capacity < 1:
-        raise HTTPException(status_code=422, detail="Course capacity must be at least 1")
+    # No specific business rules apply for course creation
     item = Course(**data.model_dump())
     session.add(item)
     session.commit()
@@ -135,17 +122,11 @@ def update_course(item_id: int, data: CourseUpdate, session: Session = Depends(g
     item = session.query(Course).filter(Course.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Course not found")
-    # LLM_FILL: Validate update_course logic
-    if data.title is not None:
-        existing = session.query(Course).filter(Course.title == data.title, Course.id != item_id).first()
-        if existing:
-            raise HTTPException(status_code=409, detail="Title already in use by another course")
-    if data.capacity is not None and data.capacity < 1:
-        raise HTTPException(status_code=422, detail="Course capacity must be at least 1")
+    # Validate update_course logic: ensure new capacity is not lower than current enrollments
     if data.capacity is not None:
         current_enrollments = session.query(Enrollment).filter(Enrollment.course_id == item_id).count()
         if data.capacity < current_enrollments:
-            raise HTTPException(status_code=400, detail="Cannot reduce capacity below current enrollment count")
+            raise HTTPException(status_code=400, detail="New capacity cannot be less than current enrollment count.")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
     session.commit()
@@ -159,10 +140,7 @@ def delete_course(item_id: int, session: Session = Depends(get_session)):
     item = session.query(Course).filter(Course.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Course not found")
-    # LLM_FILL: Validate delete_course logic (cascade checks)
-    enrollments = session.query(Enrollment).filter(Enrollment.course_id == item_id).all()
-    if enrollments:
-        raise HTTPException(status_code=400, detail="Cannot delete course with active enrollments")
+    # No additional cascade checks required
     session.delete(item)
     session.commit()
 
@@ -189,24 +167,27 @@ def get_enrollment(item_id: int, session: Session = Depends(get_session)):
 @router_3.post("/", response_model=EnrollmentResponse, status_code=status.HTTP_201_CREATED)
 def create_enrollment(data: EnrollmentCreate, session: Session = Depends(get_session)):
     """Create a new Enrollment."""
-    # LLM_FILL: Apply business rule: Prevent enrollment when the course has reached its maximum capacity. The system must count...
-    # LLM_FILL: Apply business rule: Prevent a student from enrolling in the same course more than once. The system must check for...
-    # LLM_FILL: Validate create_enrollment logic
+    # Check student and course existence
     student = session.query(Student).filter(Student.id == data.student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     course = session.query(Course).filter(Course.id == data.course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
-    existing_enrollment = session.query(Enrollment).filter(
+
+    # Business rule: duplicate enrollment
+    existing = session.query(Enrollment).filter(
         Enrollment.student_id == data.student_id,
         Enrollment.course_id == data.course_id
     ).first()
-    if existing_enrollment:
-        raise HTTPException(status_code=409, detail="Student is already enrolled in this course")
-    current_count = session.query(Enrollment).filter(Enrollment.course_id == data.course_id).count()
-    if current_count >= course.capacity:
-        raise HTTPException(status_code=400, detail="Course has reached maximum capacity")
+    if existing:
+        raise HTTPException(status_code=409, detail="Student already enrolled in this course")
+
+    # Business rule: capacity check
+    enrollment_count = session.query(Enrollment).filter(Enrollment.course_id == data.course_id).count()
+    if enrollment_count >= course.capacity:
+        raise HTTPException(status_code=400, detail="Course has reached its maximum capacity")
+
     item = Enrollment(**data.model_dump())
     session.add(item)
     session.commit()
@@ -220,33 +201,44 @@ def update_enrollment(item_id: int, data: EnrollmentUpdate, session: Session = D
     item = session.query(Enrollment).filter(Enrollment.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Enrollment not found")
-    # LLM_FILL: Validate update_enrollment logic
-    if data.student_id is not None or data.course_id is not None:
-        new_student_id = data.student_id if data.student_id is not None else item.student_id
-        new_course_id = data.course_id if data.course_id is not None else item.course_id
-        if data.student_id is not None:
-            student = session.query(Student).filter(Student.id == data.student_id).first()
-            if not student:
-                raise HTTPException(status_code=404, detail="Student not found")
-        if data.course_id is not None:
-            course = session.query(Course).filter(Course.id == data.course_id).first()
-            if not course:
-                raise HTTPException(status_code=404, detail="Course not found")
-        existing_enrollment = session.query(Enrollment).filter(
+
+    # Store original values for comparison
+    old_student_id = item.student_id
+    old_course_id = item.course_id
+
+    # Determine effective new values
+    new_student_id = data.student_id if data.student_id is not None else old_student_id
+    new_course_id = data.course_id if data.course_id is not None else old_course_id
+
+    # If the combination changed, check for duplicate enrollment (excluding current)
+    if new_student_id != old_student_id or new_course_id != old_course_id:
+        dup = session.query(Enrollment).filter(
             Enrollment.student_id == new_student_id,
             Enrollment.course_id == new_course_id,
             Enrollment.id != item_id
         ).first()
-        if existing_enrollment:
-            raise HTTPException(status_code=409, detail="This enrollment already exists")
-        if data.course_id is not None:
-            course = session.query(Course).filter(Course.id == data.course_id).first()
-            current_count = session.query(Enrollment).filter(
-                Enrollment.course_id == data.course_id,
-                Enrollment.id != item_id
-            ).count()
-            if current_count >= course.capacity:
-                raise HTTPException(status_code=400, detail="Course has reached maximum capacity")
+        if dup:
+            raise HTTPException(status_code=409, detail="Student already enrolled in this course")
+
+    # If course changed, check capacity of the new course
+    if new_course_id != old_course_id:
+        new_course = session.query(Course).filter(Course.id == new_course_id).first()
+        if not new_course:
+            raise HTTPException(status_code=404, detail="Course not found")
+        # Count other enrollments in the new course (excluding this enrollment)
+        other_count = session.query(Enrollment).filter(
+            Enrollment.course_id == new_course_id,
+            Enrollment.id != item_id
+        ).count()
+        if other_count + 1 > new_course.capacity:
+            raise HTTPException(status_code=400, detail="Course has reached its maximum capacity")
+
+    # If student changed, verify new student exists
+    if new_student_id != old_student_id:
+        student = session.query(Student).filter(Student.id == new_student_id).first()
+        if not student:
+            raise HTTPException(status_code=404, detail="Student not found")
+
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
     session.commit()
@@ -260,7 +252,7 @@ def delete_enrollment(item_id: int, session: Session = Depends(get_session)):
     item = session.query(Enrollment).filter(Enrollment.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Enrollment not found")
-    # LLM_FILL: Validate delete_enrollment logic (cascade checks)
+    # No additional cascade checks required
     session.delete(item)
     session.commit()
 

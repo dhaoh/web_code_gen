@@ -5,12 +5,12 @@ Generated from model definition.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .models import init_db
-from .routes import routers
+from models import init_db
+from routes import routers
 
 app = FastAPI(
     title="{{ model.name | replace('_', ' ') | title }}",
-    description="{{ model.description | truncate(200) }}",
+    description="{{ model.description | replace('\n', ' ') | truncate(200) }}",
     version="1.0.0",
 )
 

@@ -1,100 +1,19 @@
-const API_BASE = 'http://localhost:8000/api';
+const BASE_URL = '/api';
 
-// Helper function for API calls
-async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'An error occurred' }));
-    throw new Error(error.detail || `HTTP error! status: ${response.status}`);
-  }
-
-  if (response.status === 204) {
-    return {} as T;
-  }
-
-  return response.json();
-}
-
-// Student API
-export interface Student {
+interface Student {
   id: number;
   name: string;
   email: string;
-  courses: Course[];
 }
 
-export interface StudentCreate {
-  name: string;
-  email: string;
-}
-
-export interface StudentUpdate {
-  name?: string;
-  email?: string;
-}
-
-export const studentApi = {
-  getAll: () => apiCall<Student[]>('/students/'),
-  getById: (id: number) => apiCall<Student>(`/students/${id}`),
-  create: (data: StudentCreate) => apiCall<Student>('/students/', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-  update: (id: number, data: StudentUpdate) => apiCall<Student>(`/students/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
-  delete: (id: number) => apiCall<void>(`/students/${id}`, {
-    method: 'DELETE',
-  }),
-};
-
-// Course API
-export interface Course {
+interface Course {
   id: number;
   title: string;
   description?: string;
   capacity: number;
-  students: Student[];
-  enrollment_count: number;
 }
 
-export interface CourseCreate {
-  title: string;
-  description?: string;
-  capacity: number;
-}
-
-export interface CourseUpdate {
-  title?: string;
-  description?: string;
-  capacity?: number;
-}
-
-export const courseApi = {
-  getAll: () => apiCall<Course[]>('/courses/'),
-  getById: (id: number) => apiCall<Course>(`/courses/${id}`),
-  create: (data: CourseCreate) => apiCall<Course>('/courses/', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-  update: (id: number, data: CourseUpdate) => apiCall<Course>(`/courses/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
-  delete: (id: number) => apiCall<void>(`/courses/${id}`, {
-    method: 'DELETE',
-  }),
-};
-
-// Enrollment API
-export interface Enrollment {
+interface Enrollment {
   id: number;
   student_id: number;
   course_id: number;
@@ -103,19 +22,115 @@ export interface Enrollment {
   course: Course;
 }
 
-export interface EnrollmentCreate {
-  student_id: number;
-  course_id: number;
+// Students
+export async function fetchStudents(): Promise<Student[]> {
+  const res = await fetch(`${BASE_URL}/students`);
+  if (!res.ok) throw new Error('Failed to fetch students');
+  return res.json();
 }
 
-export const enrollmentApi = {
-  getAll: () => apiCall<Enrollment[]>('/enrollments/'),
-  getById: (id: number) => apiCall<Enrollment>(`/enrollments/${id}`),
-  create: (data: EnrollmentCreate) => apiCall<Enrollment>('/enrollments/', {
+export async function getStudent(id: number): Promise<Student> {
+  const res = await fetch(`${BASE_URL}/students/${id}`);
+  if (!res.ok) throw new Error('Student not found');
+  return res.json();
+}
+
+export async function createStudent(data: Omit<Student, 'id'>): Promise<Student> {
+  const res = await fetch(`${BASE_URL}/students`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
-  }),
-  delete: (id: number) => apiCall<void>(`/enrollments/${id}`, {
-    method: 'DELETE',
-  }),
-};
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Failed to create student');
+  }
+  return res.json();
+}
+
+export async function updateStudent(id: number, data: Partial<Omit<Student, 'id'>>): Promise<Student> {
+  const res = await fetch(`${BASE_URL}/students/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Failed to update student');
+  }
+  return res.json();
+}
+
+export async function deleteStudent(id: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/students/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete student');
+}
+
+// Courses
+export async function fetchCourses(): Promise<Course[]> {
+  const res = await fetch(`${BASE_URL}/courses`);
+  if (!res.ok) throw new Error('Failed to fetch courses');
+  return res.json();
+}
+
+export async function getCourse(id: number): Promise<Course> {
+  const res = await fetch(`${BASE_URL}/courses/${id}`);
+  if (!res.ok) throw new Error('Course not found');
+  return res.json();
+}
+
+export async function createCourse(data: Omit<Course, 'id'>): Promise<Course> {
+  const res = await fetch(`${BASE_URL}/courses`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Failed to create course');
+  }
+  return res.json();
+}
+
+export async function updateCourse(id: number, data: Partial<Omit<Course, 'id'>>): Promise<Course> {
+  const res = await fetch(`${BASE_URL}/courses/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Failed to update course');
+  }
+  return res.json();
+}
+
+export async function deleteCourse(id: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/courses/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete course');
+}
+
+// Enrollments
+export async function fetchEnrollments(): Promise<Enrollment[]> {
+  const res = await fetch(`${BASE_URL}/enrollments`);
+  if (!res.ok) throw new Error('Failed to fetch enrollments');
+  return res.json();
+}
+
+export async function createEnrollment(data: { student_id: number; course_id: number }): Promise<Enrollment> {
+  const res = await fetch(`${BASE_URL}/enrollments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Failed to create enrollment');
+  }
+  return res.json();
+}
+
+export async function deleteEnrollment(id: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/enrollments/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete enrollment');
+}

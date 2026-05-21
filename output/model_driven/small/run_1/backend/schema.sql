@@ -1,7 +1,7 @@
 -- Generated from model: student_course_system_small
 -- A simple student course selection system. Students can browse available courses and enroll. The system tracks enrollments and prevents over-capacity enrollment.
 
--- Generation timestamp: 2026-05-20T15:25:11.298164+00:00
+-- Generation timestamp: 2026-05-21T13:32:12.376096+00:00
 
 -- ==========================================
 -- Table: students

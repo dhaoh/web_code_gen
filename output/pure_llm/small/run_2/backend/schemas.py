@@ -1,31 +1,29 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from pydantic import BaseModel, EmailStr, Field, validator
+from typing import Optional
 from datetime import datetime
 
-# Student Schemas
+# ---- Student ----
 class StudentBase(BaseModel):
     name: str
-    email: str
+    email: EmailStr
 
 class StudentCreate(StudentBase):
     pass
 
 class StudentUpdate(BaseModel):
     name: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
 
-class StudentResponse(StudentBase):
+class StudentOut(StudentBase):
     id: int
-    courses: List["CourseResponse"] = []
-
     class Config:
-        from_attributes = True
+        orm_mode = True
 
-# Course Schemas
+# ---- Course ----
 class CourseBase(BaseModel):
     title: str
     description: Optional[str] = None
-    capacity: int
+    capacity: int = Field(..., gt=0)
 
 class CourseCreate(CourseBase):
     pass
@@ -33,17 +31,14 @@ class CourseCreate(CourseBase):
 class CourseUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    capacity: Optional[int] = None
+    capacity: Optional[int] = Field(None, gt=0)
 
-class CourseResponse(CourseBase):
+class CourseOut(CourseBase):
     id: int
-    students: List["StudentResponse"] = []
-    enrollment_count: int = 0
-
     class Config:
-        from_attributes = True
+        orm_mode = True
 
-# Enrollment Schemas
+# ---- Enrollment ----
 class EnrollmentBase(BaseModel):
     student_id: int
     course_id: int
@@ -51,15 +46,11 @@ class EnrollmentBase(BaseModel):
 class EnrollmentCreate(EnrollmentBase):
     pass
 
-class EnrollmentResponse(EnrollmentBase):
+class EnrollmentOut(EnrollmentBase):
     id: int
     enrolled_at: datetime
-    student: StudentResponse
-    course: CourseResponse
+    student: StudentOut
+    course: CourseOut
 
     class Config:
-        from_attributes = True
-
-# Update forward references
-StudentResponse.model_rebuild()
-CourseResponse.model_rebuild()
+        orm_mode = True

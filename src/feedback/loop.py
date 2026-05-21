@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import subprocess
 import sys
-import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -15,7 +14,7 @@ from src.parser.ir import ModelIR
 @dataclass
 class FeedbackResult:
     iterations: int = 0
-    errors_per_iteration: list[list[str]] = field(default_factory=list)
+    errors_per_iteration: list[dict] = field(default_factory=list)
     final_pass: bool = False
     final_output: str = ""
 
@@ -33,24 +32,24 @@ def run_feedback_loop(
     for iteration in range(1, max_iterations + 1):
         result.iterations = iteration
 
-        errors = _check_code(code_dir)
-        result.errors_per_iteration.append(errors)
+        file_errors = _check_code(code_dir)
+        result.errors_per_iteration.append(file_errors)
 
-        if not errors:
+        if not file_errors:
             result.final_pass = True
             break
 
         if iteration < max_iterations:
-            _fix_errors(model_context, code_dir, errors)
+            _fix_errors(model_context, code_dir, file_errors)
 
     result.final_output = str(code_dir)
     return result
 
 
-def _check_code(code_dir: Path) -> list[str]:
-    errors: list[str] = []
+def _check_code(code_dir: Path) -> dict[str, list[str]]:
+    """Check code for errors. Returns {filename: [error_messages]}."""
+    file_errors: dict[str, list[str]] = {}
 
-    # Check Python syntax
     for py_file in sorted(code_dir.glob("**/*.py")):
         try:
             result = subprocess.run(
@@ -60,43 +59,68 @@ def _check_code(code_dir: Path) -> list[str]:
                 timeout=30,
             )
             if result.returncode != 0:
-                errors.append(f"[{py_file.name}] Syntax: {result.stderr.strip()[:300]}")
+                file_errors.setdefault(str(py_file), []).append(
+                    f"Syntax: {result.stderr.strip()[:300]}"
+                )
         except subprocess.TimeoutExpired:
-            errors.append(f"[{py_file.name}] Compilation timed out")
+            file_errors.setdefault(str(py_file), []).append("Compilation timed out")
 
-    # Check imports (try importing the main module)
+    # Check if main.py can be imported successfully
     main_py = code_dir / "main.py"
+    if not main_py.exists():
+        # Search recursively
+        candidates = list(code_dir.rglob("main.py"))
+        if candidates:
+            main_py = candidates[0]
+
+    main_dir = main_py.parent if main_py.exists() else code_dir
     if main_py.exists():
         try:
             result = subprocess.run(
                 [
                     sys.executable,
                     "-c",
-                    f"import sys; sys.path.insert(0, '{code_dir}'); "
+                    f"import sys; sys.path.insert(0, '{main_dir}'); "
                     "from main import app",
                 ],
                 capture_output=True,
                 text=True,
                 timeout=30,
-                cwd=str(code_dir),
+                cwd=str(main_dir),
             )
             if result.returncode != 0:
-                errors.append(f"[import] {result.stderr.strip()[:500]}")
+                err_msg = result.stderr.strip()
+                # Try to determine which file caused the import error
+                for py_file in sorted(code_dir.glob("**/*.py")):
+                    if py_file.name in err_msg:
+                        file_errors.setdefault(str(py_file), []).append(
+                            f"Import: {err_msg[:500]}"
+                        )
+                        break
+                else:
+                    # Attribute to main.py if can't determine
+                    file_errors.setdefault(str(main_py), []).append(
+                        f"Import: {err_msg[:500]}"
+                    )
         except subprocess.TimeoutExpired:
-            errors.append("[import] Timed out")
+            file_errors.setdefault(str(main_py), []).append("Import check timed out")
 
-    return errors
+    return file_errors
 
 
 def _fix_errors(
     model_context: str,
     code_dir: Path,
-    errors: list[str],
+    file_errors: dict[str, list[str]],
 ) -> None:
-    error_text = "\n".join(errors)
+    """Fix ONLY files that have errors. Do not modify error-free files."""
+    for file_path_str, errors in file_errors.items():
+        py_file = Path(file_path_str)
+        if not py_file.exists():
+            continue
 
-    for py_file in sorted(code_dir.glob("**/*.py")):
         original = py_file.read_text(encoding="utf-8")
+        error_text = "\n".join(errors)
 
         user_prompt = FEEDBACK_FIX_PROMPT.format(
             model_context=model_context,
@@ -106,19 +130,25 @@ def _fix_errors(
 
         try:
             fixed = call_llm(
-                system_prompt="You are a code fixing assistant. Fix the provided code to resolve all listed errors while maintaining the model constraints.",
+                system_prompt=(
+                    "You are a code fixing assistant. Fix ONLY the errors listed below. "
+                    "Do NOT add new functionality. Do NOT add package installation code. "
+                    "Do NOT add try/except imports. Do NOT modify imports unless they cause "
+                    "the specific error. Make the MINIMAL change needed."
+                ),
                 user_prompt=user_prompt,
                 temperature=0.1,
             )
-            # Clean output
             fixed = fixed.strip()
             if fixed.startswith("```"):
                 first_nl = fixed.find("\n")
                 if first_nl != -1:
-                    fixed = fixed[first_nl + 1 :]
+                    fixed = fixed[first_nl + 1:]
                 if fixed.endswith("```"):
                     fixed = fixed[: fixed.rfind("```")].strip()
-            if fixed.startswith(original.split("\n")[0][:15]):
+            # Only write if the fix started from the original file's header
+            original_header = original.strip().split("\n")[0][:20].strip()
+            if fixed.startswith(original_header) or len(fixed) > len(original) * 0.5:
                 py_file.write_text(fixed, encoding="utf-8")
         except Exception:
             continue
