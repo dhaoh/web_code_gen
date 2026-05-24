@@ -1,8 +1,6 @@
-import pytest
 from pathlib import Path
 
 from src.parser.parser import parse_model
-from src.parser.ir import ModelIR, Entity, Attribute, AttributeType, BusinessRule
 
 
 MODELS_DIR = Path(__file__).parent.parent / "models"

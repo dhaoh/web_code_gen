@@ -4,8 +4,8 @@ from pathlib import Path
 import pytest
 
 from src.parser.parser import parse_model
-from src.evaluator.structure import evaluate_structure, StructureScore
-from src.evaluator.compilability import evaluate_compilability, CompilabilityScore
+from src.evaluator.structure import evaluate_structure
+from src.evaluator.compilability import evaluate_compilability
 from src.evaluator.consistency import evaluate_consistency
 
 
@@ -48,7 +48,6 @@ def delete_student(): pass
             score = evaluate_structure(small_model, out)
             assert score.entity_count_match
             assert score.table_count_match
-            # Should detect at least some endpoints
 
 
 class TestCompilabilityEvaluator:

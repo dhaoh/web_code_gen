@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from src.generator.engine import py_default, py_type
-from src.parser.ir import Attribute, Entity, ModelIR
+from src.parser.ir import Attribute, ModelIR
 
 
 _BACKEND_TEMPLATES = [

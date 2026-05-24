@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from openai import OpenAI
 
 from src.config import get_deepseek_client, DEEPSEEK_MODEL
 

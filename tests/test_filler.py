@@ -1,13 +1,4 @@
-import tempfile
-from pathlib import Path
-
-import pytest
-
-from src.parser.parser import parse_model
 from src.llm.filler import _clean_llm_output
-
-
-MODELS_DIR = Path(__file__).parent.parent / "models"
 
 
 class TestCleanLLMOutput:
