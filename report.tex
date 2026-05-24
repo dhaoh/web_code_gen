@@ -15,6 +15,7 @@
 \usepackage{enumitem}
 \usepackage{float}
 \usepackage{tikz}
+\usetikzlibrary{positioning}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepackage{caption}
@@ -202,13 +203,15 @@ Figure~\ref{fig:overview} provides a high-level overview of the two approaches c
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[node distance=1.5cm, auto,
-    method/.style={rectangle, draw=blue!60, fill=blue!5, very thick, minimum width=5cm, minimum height=1cm, rounded corners},
-    artifact/.style={rectangle, draw=gray!60, fill=gray!5, minimum width=4cm, minimum height=0.7cm},
+\begin{tikzpicture}[auto,
+    method/.style={rectangle, draw=blue!60, fill=blue!5, very thick, minimum width=5cm, minimum height=0.9cm, rounded corners, font=\small},
+    method2/.style={rectangle, draw=red!60, fill=red!5, very thick, minimum width=5cm, minimum height=0.9cm, rounded corners, font=\small},
+    artifact/.style={rectangle, draw=gray!60, fill=gray!5, minimum width=4.5cm, minimum height=0.7cm, font=\small},
     arrow/.style={->, >=stealth, thick}]
 
-% Model-Driven path
-\node[method] (yaml) {YAML Domain Model};
+% Left column: Model-Driven
+\begin{scope}[node distance=1.2cm]
+\node[method] (yaml) at (0, 3.2) {YAML Domain Model};
 \node[method, below of=yaml] (parser) {Model Parser (Pydantic IR)};
 \node[method, below of=parser] (skeleton) {Code Skeleton Generator (Jinja2)};
 \node[method, below of=skeleton] (filler) {LLM Business Logic Filler};
@@ -220,19 +223,22 @@ Figure~\ref{fig:overview} provides a high-level overview of the two approaches c
 \draw[arrow] (skeleton) -- (filler);
 \draw[arrow] (filler) -- (feedback);
 \draw[arrow] (feedback) -- (mdout);
-\draw[arrow, bend right=30, dashed] (feedback.east) to node[right] {errors} (filler.east);
+\draw[arrow, bend right=40, dashed] (feedback.east) to node[right, font=\footnotesize] {errors} (filler.east);
+\end{scope}
 
-% Pure LLM path
-\node[method, right=7cm of yaml, fill=red!5, draw=red!60] (nl) {Natural Language Description};
-\node[method, below of=nl, fill=red!5, draw=red!60] (llm) {LLM (Direct Generation)};
+% Right column: Pure LLM
+\begin{scope}[node distance=2.6cm]
+\node[method2] (nl) at (7.5, 3.2) {Natural Language Description};
+\node[method2, below of=nl] (llm) {LLM (Direct Generation)};
 \node[artifact, below of=llm, fill=red!10] (plout) {Generated Application Code};
 
 \draw[arrow] (nl) -- (llm);
 \draw[arrow] (llm) -- (plout);
+\end{scope}
 
 % Labels
-\node[above=0.3cm of yaml, font=\bfseries] {Model-Driven Method};
-\node[above=0.3cm of nl, font=\bfseries] {Pure LLM Method};
+\node[above=0.5cm of yaml, font=\bfseries] {Model-Driven Method};
+\node[above=0.5cm of nl, font=\bfseries] {Pure LLM Method};
 
 \end{tikzpicture}
 \caption{Overview of the two code generation approaches. The model-driven method (left) uses a structured pipeline with deterministic skeleton generation and iterative feedback. The pure LLM method (right) generates code directly from natural language.}
