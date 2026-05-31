@@ -30,7 +30,6 @@ htmlcov/
 Thumbs.db
 
 # Generated code output (all experiment runs)
-output/
 
 # Frontend build artifacts
 node_modules/

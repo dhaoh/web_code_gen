@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# ============================================================
+# Startup script for Student Course System Small
+# Generated from domain model.
+# ============================================================
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+echo "============================================"
+echo " Student Course System Small"
+echo "============================================"
+
+# --- Backend ---
+echo ""
+echo "[1/2] Starting backend server..."
+cd "$SCRIPT_DIR/backend"
+
+if [ ! -d "venv" ]; then
+    echo "  Creating Python virtual environment..."
+    python3 -m venv venv
+fi
+source venv/bin/activate
+
+echo "  Installing Python dependencies..."
+pip install -q -r requirements.txt
+
+echo "  Starting FastAPI server on http://localhost:8000"
+uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+BACKEND_PID=$!
+
+# --- Frontend ---
+echo ""
+echo "[2/2] Starting frontend dev server..."
+cd "$SCRIPT_DIR/frontend"
+
+if [ ! -d "node_modules" ]; then
+    echo "  Installing npm dependencies..."
+    npm install
+fi
+
+echo "  Starting Vite dev server on http://localhost:3000"
+npm run dev &
+FRONTEND_PID=$!
+
+# --- Ready ---
+echo ""
+echo "============================================"
+echo " Application is starting up!"
+echo " Backend:  http://localhost:8000"
+echo " Frontend: http://localhost:3000"
+echo " API Docs: http://localhost:8000/docs"
+echo "============================================"
+echo ""
+echo "Press Ctrl+C to stop both servers."
+
+# Cleanup on exit
+cleanup() {
+    echo ""
+    echo "Stopping servers..."
+    kill $BACKEND_PID 2>/dev/null
+    kill $FRONTEND_PID 2>/dev/null
+    wait
+    echo "Servers stopped."
+}
+trap cleanup EXIT INT TERM
+
+wait

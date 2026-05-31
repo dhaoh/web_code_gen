@@ -1,0 +1,989 @@
+[
+  {
+    "method": "model_driven",
+    "model": "small",
+    "run_id": 0,
+    "elapsed_seconds": 115.92,
+    "feedback_iterations": 1,
+    "feedback_pass": true,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 15,
+      "frontend_components": 8,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 1.0,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": true,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "small",
+    "run_id": 1,
+    "elapsed_seconds": 114.51,
+    "feedback_iterations": 1,
+    "feedback_pass": true,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 15,
+      "frontend_components": 8,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 1.0,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": true,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "small",
+    "run_id": 2,
+    "elapsed_seconds": 62.16,
+    "feedback_iterations": 1,
+    "feedback_pass": true,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 15,
+      "frontend_components": 8,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 1.0,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": true,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "small",
+    "run_id": 3,
+    "elapsed_seconds": 81.65,
+    "feedback_iterations": 1,
+    "feedback_pass": true,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 15,
+      "frontend_components": 8,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 1.0,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": true,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "small",
+    "run_id": 4,
+    "elapsed_seconds": 90.51,
+    "feedback_iterations": 1,
+    "feedback_pass": true,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 15,
+      "frontend_components": 8,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 1.0,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": true,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "small",
+    "num_runs": 5,
+    "average_similarity": 0.9811,
+    "total_files": 15,
+    "file_scores": [
+      1.0,
+      1.0,
+      0.7221,
+      0.9951,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  {
+    "method": "pure_llm",
+    "model": "small",
+    "run_id": 0,
+    "elapsed_seconds": 143.18,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 13,
+      "frontend_components": 7,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/pure_llm/small/run_0/backend/main.py\", line 3, in <module>\n    from .models import Base\nImportError: attempted relative import with no known parent "
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "small",
+    "run_id": 1,
+    "elapsed_seconds": 156.99,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 14,
+      "frontend_components": 7,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/pure_llm/small/run_1/backend/main.py\", line 3, in <module>\n    from . import models\nImportError: attempted relative import with no known parent pack"
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "small",
+    "run_id": 2,
+    "elapsed_seconds": 160.84,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 13,
+      "frontend_components": 7,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 1.0,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": true,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "small",
+    "run_id": 3,
+    "elapsed_seconds": 166.14,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 13,
+      "frontend_components": 8,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/pure_llm/small/run_3/backend/main.py\", line 3, in <module>\n    from .database import engine\nImportError: attempted relative import with no known par",
+        "Build: "
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "small",
+    "run_id": 4,
+    "elapsed_seconds": 258.99,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.8,
+    "structure_details": {
+      "entities_expected": 3,
+      "entities_found": 3,
+      "tables_expected": 3,
+      "tables_found": 3,
+      "endpoints_expected": 15,
+      "endpoints_found": 13,
+      "frontend_components": 2,
+      "expected_frontend_components": 6
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/pure_llm/small/run_4/backend/main.py\", line 3, in <module>\n    from . import models\nImportError: attempted relative import with no known parent pack"
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "small",
+    "num_runs": 5,
+    "average_similarity": 0.3591,
+    "total_files": 15,
+    "file_scores": [
+      0.5288,
+      0.4988,
+      0.2373,
+      0.6,
+      0.6,
+      0.6,
+      0.3078,
+      0.2482,
+      0.2428,
+      0.2146,
+      0.268,
+      0.2048,
+      0.2707,
+      0.186,
+      0.3793
+    ]
+  },
+  {
+    "method": "model_driven",
+    "model": "medium",
+    "run_id": 0,
+    "elapsed_seconds": 256.1,
+    "feedback_iterations": 3,
+    "feedback_pass": false,
+    "structure_score": 0.7667,
+    "structure_details": {
+      "entities_expected": 6,
+      "entities_found": 6,
+      "tables_expected": 6,
+      "tables_found": 6,
+      "endpoints_expected": 30,
+      "endpoints_found": 18,
+      "frontend_components": 14,
+      "expected_frontend_components": 12
+    },
+    "compilability_score": 0.6667,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/model_driven/medium/run_0/backend/main.py\", line 9, in <module>\n    from routes import api_router as router  # fixed import: use api_router commonly"
+      ]
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "medium",
+    "run_id": 1,
+    "elapsed_seconds": 454.12,
+    "feedback_iterations": 3,
+    "feedback_pass": false,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 6,
+      "entities_found": 6,
+      "tables_expected": 6,
+      "tables_found": 6,
+      "endpoints_expected": 30,
+      "endpoints_found": 30,
+      "frontend_components": 14,
+      "expected_frontend_components": 12
+    },
+    "compilability_score": 0.6667,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/model_driven/medium/run_1/backend/main.py\", line 4, in <module>\n    from database import get_db\nModuleNotFoundError: No module named 'database'"
+      ]
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "medium",
+    "run_id": 2,
+    "elapsed_seconds": 146.9,
+    "feedback_iterations": 1,
+    "feedback_pass": true,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 6,
+      "entities_found": 6,
+      "tables_expected": 6,
+      "tables_found": 6,
+      "endpoints_expected": 30,
+      "endpoints_found": 30,
+      "frontend_components": 14,
+      "expected_frontend_components": 12
+    },
+    "compilability_score": 1.0,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": true,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "medium",
+    "run_id": 3,
+    "elapsed_seconds": 226.28,
+    "feedback_iterations": 3,
+    "feedback_pass": false,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 6,
+      "entities_found": 6,
+      "tables_expected": 6,
+      "tables_found": 6,
+      "endpoints_expected": 30,
+      "endpoints_found": 28,
+      "frontend_components": 14,
+      "expected_frontend_components": 12
+    },
+    "compilability_score": 0.6667,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/model_driven/medium/run_3/backend/main.py\", line 9, in <module>\n    from routes import app as router  # Fix: import the correct object (likely 'app'"
+      ]
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "medium",
+    "run_id": 4,
+    "elapsed_seconds": 259.74,
+    "feedback_iterations": 3,
+    "feedback_pass": false,
+    "structure_score": 1.0,
+    "structure_details": {
+      "entities_expected": 6,
+      "entities_found": 6,
+      "tables_expected": 6,
+      "tables_found": 6,
+      "endpoints_expected": 30,
+      "endpoints_found": 24,
+      "frontend_components": 14,
+      "expected_frontend_components": 12
+    },
+    "compilability_score": 0.6667,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/model_driven/medium/run_4/backend/main.py\", line 9, in <module>\n    from routes import app as sub_app\nImportError: cannot import name 'app' from 'ro"
+      ]
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "medium",
+    "num_runs": 5,
+    "average_similarity": 0.9564,
+    "total_files": 21,
+    "file_scores": [
+      0.5291,
+      1.0,
+      0.5581,
+      0.9973,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  {
+    "method": "pure_llm",
+    "model": "medium",
+    "run_id": 0,
+    "elapsed_seconds": 263.96,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.875,
+    "structure_details": {
+      "entities_expected": 6,
+      "entities_found": 6,
+      "tables_expected": 6,
+      "tables_found": 6,
+      "endpoints_expected": 30,
+      "endpoints_found": 26,
+      "frontend_components": 7,
+      "expected_frontend_components": 12
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/pure_llm/medium/run_0/backend/main.py\", line 3, in <module>\n    from .models import Base, engine\nImportError: attempted relative import with no know"
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "medium",
+    "run_id": 1,
+    "elapsed_seconds": 248.17,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.875,
+    "structure_details": {
+      "entities_expected": 6,
+      "entities_found": 6,
+      "tables_expected": 6,
+      "tables_found": 6,
+      "endpoints_expected": 30,
+      "endpoints_found": 32,
+      "frontend_components": 7,
+      "expected_frontend_components": 12
+    },
+    "compilability_score": 0.6667,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": true,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": [
+        "Build: "
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "medium",
+    "run_id": 2,
+    "elapsed_seconds": 252.28,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.8,
+    "structure_details": {
+      "entities_expected": 6,
+      "entities_found": 6,
+      "tables_expected": 6,
+      "tables_found": 6,
+      "endpoints_expected": 30,
+      "endpoints_found": 28,
+      "frontend_components": 4,
+      "expected_frontend_components": 12
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"/Users/hdhao9211/miniconda3/envs/web_code_gen/lib/python3.11/site-packages/pydantic/networks.py\", line 966, in import_email_validator\n    import email_validator\nModuleNotFoundError: No module named 'email_validator'\n\nThe above exception was the direct cause"
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "medium",
+    "run_id": 3,
+    "elapsed_seconds": 282.48,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.825,
+    "structure_details": {
+      "entities_expected": 6,
+      "entities_found": 6,
+      "tables_expected": 6,
+      "tables_found": 6,
+      "endpoints_expected": 30,
+      "endpoints_found": 31,
+      "frontend_components": 5,
+      "expected_frontend_components": 12
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"/Users/hdhao9211/miniconda3/envs/web_code_gen/lib/python3.11/site-packages/pydantic/networks.py\", line 966, in import_email_validator\n    import email_validator\nModuleNotFoundError: No module named 'email_validator'\n\nThe above exception was the direct cause"
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "medium",
+    "run_id": 4,
+    "elapsed_seconds": 259.18,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.95,
+    "structure_details": {
+      "entities_expected": 6,
+      "entities_found": 6,
+      "tables_expected": 6,
+      "tables_found": 6,
+      "endpoints_expected": 30,
+      "endpoints_found": 29,
+      "frontend_components": 10,
+      "expected_frontend_components": 12
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"/Users/hdhao9211/miniconda3/envs/web_code_gen/lib/python3.11/site-packages/pydantic/networks.py\", line 966, in import_email_validator\n    import email_validator\nModuleNotFoundError: No module named 'email_validator'\n\nThe above exception was the direct cause"
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "medium",
+    "num_runs": 5,
+    "average_similarity": 0.4126,
+    "total_files": 13,
+    "file_scores": [
+      0.3745,
+      0.4933,
+      0.0753,
+      0.1919,
+      0.3644,
+      0.0508,
+      0.6,
+      0.2135,
+      0.6,
+      0.6,
+      0.6,
+      0.6,
+      0.6
+    ]
+  },
+  {
+    "method": "model_driven",
+    "model": "large",
+    "run_id": 0,
+    "elapsed_seconds": 351.73,
+    "feedback_iterations": 3,
+    "feedback_pass": false,
+    "structure_score": 0.7667,
+    "structure_details": {
+      "entities_expected": 11,
+      "entities_found": 11,
+      "tables_expected": 11,
+      "tables_found": 11,
+      "endpoints_expected": 55,
+      "endpoints_found": 0,
+      "frontend_components": 24,
+      "expected_frontend_components": 22
+    },
+    "compilability_score": 0.6667,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/model_driven/large/run_0/backend/main.py\", line 5, in <module>\n    from user_routes import router as users_router\nModuleNotFoundError: No module nam"
+      ]
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "large",
+    "run_id": 1,
+    "elapsed_seconds": 425.51,
+    "feedback_iterations": 3,
+    "feedback_pass": false,
+    "structure_score": 0.7667,
+    "structure_details": {
+      "entities_expected": 11,
+      "entities_found": 11,
+      "tables_expected": 11,
+      "tables_found": 11,
+      "endpoints_expected": 55,
+      "endpoints_found": 35,
+      "frontend_components": 24,
+      "expected_frontend_components": 22
+    },
+    "compilability_score": 0.6667,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/model_driven/large/run_1/backend/main.py\", line 9, in <module>\n    from routes import router\nImportError: cannot import name 'router' from 'routes' "
+      ]
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "large",
+    "run_id": 2,
+    "elapsed_seconds": 259.91,
+    "feedback_iterations": 3,
+    "feedback_pass": true,
+    "structure_score": 0.7667,
+    "structure_details": {
+      "entities_expected": 11,
+      "entities_found": 11,
+      "tables_expected": 11,
+      "tables_found": 11,
+      "endpoints_expected": 55,
+      "endpoints_found": 0,
+      "frontend_components": 24,
+      "expected_frontend_components": 22
+    },
+    "compilability_score": 1.0,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": true,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "large",
+    "run_id": 3,
+    "elapsed_seconds": 702.81,
+    "feedback_iterations": 3,
+    "feedback_pass": false,
+    "structure_score": 0.7667,
+    "structure_details": {
+      "entities_expected": 11,
+      "entities_found": 11,
+      "tables_expected": 11,
+      "tables_found": 11,
+      "endpoints_expected": 55,
+      "endpoints_found": 29,
+      "frontend_components": 24,
+      "expected_frontend_components": 22
+    },
+    "compilability_score": 0.6667,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/model_driven/large/run_3/backend/main.py\", line 8, in <module>\n    from .database import get_db\nImportError: attempted relative import with no known"
+      ]
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "large",
+    "run_id": 4,
+    "elapsed_seconds": 237.49,
+    "feedback_iterations": 3,
+    "feedback_pass": true,
+    "structure_score": 0.7667,
+    "structure_details": {
+      "entities_expected": 11,
+      "entities_found": 11,
+      "tables_expected": 11,
+      "tables_found": 11,
+      "endpoints_expected": 55,
+      "endpoints_found": 18,
+      "frontend_components": 24,
+      "expected_frontend_components": 22
+    },
+    "compilability_score": 1.0,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": true,
+      "frontend_build_pass": true,
+      "has_frontend": true,
+      "errors": []
+    }
+  },
+  {
+    "method": "model_driven",
+    "model": "large",
+    "num_runs": 5,
+    "average_similarity": 0.9479,
+    "total_files": 31,
+    "file_scores": [
+      0.1362,
+      1.0,
+      0.2507,
+      0.9987,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  {
+    "method": "pure_llm",
+    "model": "large",
+    "run_id": 0,
+    "elapsed_seconds": 275.55,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.0,
+    "structure_details": {
+      "entities_expected": 11,
+      "entities_found": 10,
+      "tables_expected": 11,
+      "tables_found": 10,
+      "endpoints_expected": 55,
+      "endpoints_found": 0,
+      "frontend_components": 0,
+      "expected_frontend_components": 22
+    },
+    "compilability_score": 0.5,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": false,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/pure_llm/large/run_0/backend/main.py\", line 3, in <module>\n    from . import models\nImportError: attempted relative import with no known parent pack"
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "large",
+    "run_id": 1,
+    "elapsed_seconds": 268.51,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.2742,
+    "structure_details": {
+      "entities_expected": 11,
+      "entities_found": 11,
+      "tables_expected": 11,
+      "tables_found": 10,
+      "endpoints_expected": 55,
+      "endpoints_found": 40,
+      "frontend_components": 3,
+      "expected_frontend_components": 22
+    },
+    "compilability_score": 0.3333,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": true,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/pure_llm/large/run_1/backend/main.py\", line 3, in <module>\n    from .database import engine, Base\nImportError: attempted relative import with no kno"
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "large",
+    "run_id": 2,
+    "elapsed_seconds": 212.72,
+    "error": "[Errno 63] File name too long: '/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/pure_llm/large/run_2/frontend/pages/DepartmentListPage.tsx, DepartmentFormPage.tsx, MajorListPage.tsx, MajorFormPage.tsx, CourseListPage.tsx, CourseFormPage.tsx, ClassroomListPage.tsx, ClassroomFormPage.tsx, ScheduleListPage.tsx, ScheduleFormPage.tsx, EnrollmentListPage.tsx, EnrollmentFormPage.tsx, GradeListPage.tsx, GradeFormPage.tsx, AssignmentListPage.tsx, AssignmentFormPage.tsx, MajorProgressPage.tsx'",
+    "structure_score": 0.0,
+    "compilability_score": 0.0
+  },
+  {
+    "method": "pure_llm",
+    "model": "large",
+    "run_id": 3,
+    "elapsed_seconds": 274.99,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.4667,
+    "structure_details": {
+      "entities_expected": 11,
+      "entities_found": 11,
+      "tables_expected": 11,
+      "tables_found": 11,
+      "endpoints_expected": 55,
+      "endpoints_found": 0,
+      "frontend_components": 0,
+      "expected_frontend_components": 22
+    },
+    "compilability_score": 0.5,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": false,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/pure_llm/large/run_3/backend/main.py\", line 5, in <module>\n    from routes import router as api_router\nModuleNotFoundError: No module named 'routes'"
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "large",
+    "run_id": 4,
+    "elapsed_seconds": 272.67,
+    "feedback_iterations": 0,
+    "feedback_pass": null,
+    "structure_score": 0.2333,
+    "structure_details": {
+      "entities_expected": 11,
+      "entities_found": 10,
+      "tables_expected": 11,
+      "tables_found": 10,
+      "endpoints_expected": 55,
+      "endpoints_found": 60,
+      "frontend_components": 0,
+      "expected_frontend_components": 22
+    },
+    "compilability_score": 0.5,
+    "compilability_details": {
+      "python_syntax_pass": true,
+      "python_import_pass": false,
+      "frontend_build_pass": false,
+      "has_frontend": false,
+      "errors": [
+        "Import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/Users/hdhao9211/Documents/code/homework/software/web_code_gen/output/pure_llm/large/run_4/backend/main.py\", line 3, in <module>\n    from . import models, routes\nImportError: attempted relative import with no known par"
+      ]
+    }
+  },
+  {
+    "method": "pure_llm",
+    "model": "large",
+    "num_runs": 5,
+    "average_similarity": 0.431,
+    "total_files": 5,
+    "file_scores": [
+      0.4719,
+      0.9338,
+      0.3921,
+      0.0894,
+      0.2676
+    ]
+  }
+]
